@@ -18,45 +18,67 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
   const [isOpen, setIsOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
   const previewRefs = useRef<Array<HTMLCanvasElement | null>>([])
+  const simulationRefs = useRef<Array<GravitySimulation | null>>([])
+  const animationFrameRefs = useRef<Array<number | null>>([])
 
+  // Initialize independent simulations for each universe
   useEffect(() => {
-    // Create preview simulations for each preset
     if (isOpen) {
       previewRefs.current = []
+      simulationRefs.current = []
+      animationFrameRefs.current = []
+      
       UNIVERSE_PRESETS.forEach((preset, index) => {
-        const canvas = document.createElement('canvas')
-        canvas.width = 160
-        canvas.height = 120
-        previewRefs.current[index] = canvas
-        
         // Create config
         const config: GravityConfig = {
           ...currentConfig,
           ...preset.config
         }
         
-        // Create simulation
+        // Create independent simulation for this universe
         const sim = new GravitySimulation(160, 120, config)
-        sim.loadUniverse({
-          width: 160,
-          height: 120,
-          stars: initialUniverse.stars.map(s => ({
-            x: s.x * (160 / initialUniverse.width),
-            y: s.y * (120 / initialUniverse.height),
-            mass: s.mass
-          }))
-        })
+        simulationRefs.current[index] = sim
         
-        // Run preview for 3 seconds
-        const ctx = canvas.getContext('2d')!
-        let startTime = performance.now()
-        const animate = () => {
-          const now = performance.now()
-          const elapsed = (now - startTime) / 1000
+        // Initialize universe
+        const initUniverse = () => {
+          sim.loadUniverse({
+            width: 160,
+            height: 120,
+            stars: initialUniverse.stars.map(s => ({
+              x: s.x * (160 / initialUniverse.width),
+              y: s.y * (120 / initialUniverse.height),
+              mass: s.mass
+            }))
+          })
+        }
+        initUniverse()
+      })
+    }
+    
+    // Cleanup on unmount or close
+    return () => {
+      animationFrameRefs.current.forEach((frameId) => {
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId)
+        }
+      })
+    }
+  }, [isOpen, currentConfig])
+  
+  // Animation loop for each universe
+  useEffect(() => {
+    if (!isOpen) return
+    
+    const animate = () => {
+      UNIVERSE_PRESETS.forEach((preset, index) => {
+        const canvas = previewRefs.current[index]
+        const sim = simulationRefs.current[index]
+        
+        if (canvas && sim) {
+          sim.update(1/60)
           
-          if (elapsed < 3) {
-            sim.update(1/60)
-            
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
             // Draw
             ctx.fillStyle = '#0a0a0a'
             ctx.fillRect(0, 0, 160, 120)
@@ -74,14 +96,34 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
               ctx.arc(sim.centralSun.x, sim.centralSun.y, Math.max(2, sim.centralSun.radius * (120 / initialUniverse.height)), 0, Math.PI * 2)
               ctx.fill()
             }
-            
-            requestAnimationFrame(animate)
           }
         }
-        animate()
+      })
+      
+      requestAnimationFrame(animate)
+    }
+    
+    const frameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frameId)
+  }, [isOpen])
+  
+  // Reset a specific universe
+  const handleResetUniverse = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    const sim = simulationRefs.current[index]
+    if (sim) {
+      // Reload initial universe
+      sim.loadUniverse({
+        width: 160,
+        height: 120,
+        stars: initialUniverse.stars.map(s => ({
+          x: s.x * (160 / initialUniverse.width),
+          y: s.y * (120 / initialUniverse.height),
+          mass: s.mass
+        }))
       })
     }
-  }, [isOpen, currentConfig])
+  }
 
   const handleLoadPreset = (presetIndex: number) => {
     const preset = UNIVERSE_PRESETS[presetIndex]
@@ -129,16 +171,36 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
                 onClick={() => handleLoadPreset(index)}
               >
                 <div className={styles.preview}>
-                  {previewRefs.current[index] && (
-                    <img 
-                      src={previewRefs.current[index]!.toDataURL()} 
-                      alt={preset.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                  )}
+                  <canvas
+                    ref={(el) => {
+                      if (el) {
+                        previewRefs.current[index] = el
+                      }
+                    }}
+                    width={160}
+                    height={120}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
                 </div>
                 <div className={styles.cardInfo}>
-                  <h4>{preset.name}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4>{preset.name}</h4>
+                    <button
+                      onClick={(e) => handleResetUniverse(index, e)}
+                      className={styles.resetButton}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '12px',
+                        backgroundColor: '#333',
+                        color: '#fff',
+                        border: '1px solid #555',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
                   <p>{preset.description}</p>
                   <div className={styles.badges}>
                     <span className={styles.badge}>

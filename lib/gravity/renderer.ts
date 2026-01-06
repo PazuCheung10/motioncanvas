@@ -169,9 +169,9 @@ export class GravityRenderer {
     vCirc?: number
     vEsc?: number
   }, cursorX: number, cursorY: number): void {
-    // Draw growing star with subtle pulse
-    const pulse = 1 + Math.sin(performance.now() / 100) * 0.1
-    let radius = state.radius * pulse
+    // Draw growing star with subtle pulse (only when actively creating)
+    // Remove pulse to prevent continuous shaking/shining after creation
+    const radius = state.radius
     
     // Calculate mass from radius (reverse of radius = (mass^radiusPower * radiusScale) / 2)
     // mass = ((radius * 2) / radiusScale)^(1/radiusPower)
