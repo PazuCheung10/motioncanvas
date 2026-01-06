@@ -1,6 +1,17 @@
 # Motion Canvas
 
-An interactive gravity simulation playground built with Next.js 14 and TypeScript. Create, manipulate, and observe stars in a physics-based universe with real-time gravitational interactions.
+Motion Canvas is an interactive gravity playground built to explore
+how small physics assumptions change large-scale system behavior.
+
+This project focuses less on perfect physical accuracy, and more on
+making complex simulation rules visible, adjustable, and explorable
+in real time.
+
+## What This Project Is (and Isn't)
+
+This is not a scientifically exact gravity simulator.
+It is a controlled simulation playground designed to expose
+trade-offs between stability, realism, and interactivity.
 
 ## Features
 
@@ -116,9 +127,18 @@ MotionCanvas/
 - **Reset**: Restart the current universe with fresh initial conditions
 - **Auto-save**: Universe states are automatically saved when switching between universes
 
-### Debug Panel
+### Debug Panel (Intentional Design)
 
-The debug panel allows real-time adjustment of:
+The debug panel is not only for debugging bugs.
+
+It is intentionally exposed to allow live exploration of:
+- Stability vs. chaos
+- Energy conservation vs. visual control
+- Physical realism vs. user experience
+
+This makes system behavior observable instead of hidden.
+
+You can adjust:
 - Physics parameters (gravity constant, damping, softening)
 - Visual settings (radius scale, trail length, colors)
 - Launch mechanics (flick sensitivity, mass resistance)
@@ -160,7 +180,13 @@ The Evolution Lab (`/evolution-lab`) uses genetic algorithms to evolve star conf
 
 ## Development Notes
 
-- The simulation uses a Verlet integration scheme for stable physics
+- Verlet integration is used for stability and simplicity.
+  More advanced integrators were intentionally avoided
+  to keep the system understandable and debuggable.
+
+- Some non-physical options (damping, force clamping) exist
+  and are explicitly labeled as such instead of being hidden.
+
 - Star states are preserved when switching universes (like TV channels)
 - Configurations can be passed via URL parameters for sharing
 - The system supports both mouse and touch interactions
