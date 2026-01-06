@@ -84,6 +84,8 @@ export interface GravityConfig {
   orbitTrailFadeTime: number
   enableBoundaryWrapping: boolean // Torus mode
   
+  potentialEnergyDegree: number // Power law for potential: U = -G*m1*m2 / r^(degree-1), force = G*m1*m2*(degree-1) / r^degree
+  
   // Old stuff, kept for compatibility
   maxStarSize: number
   starMinRadius: number
@@ -147,6 +149,8 @@ export const GRAVITY_CONFIG: GravityConfig = {
   enableOrbitTrails: false,
   orbitTrailFadeTime: 1.0,
   enableBoundaryWrapping: true, // Torus mode - breaks energy conservation
+  
+  potentialEnergyDegree: 2, // Potential U = -G*m1*m2 / r^(degree-1), force = G*m1*m2*(degree-1) / r^degree
   
   maxStarSize: MAX_STAR_SIZE,
   starMinRadius: 3,

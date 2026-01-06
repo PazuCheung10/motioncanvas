@@ -622,10 +622,16 @@ export class GravitySimulation {
         const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
         const r = Math.sqrt(r2)
         const invR = 1 / r
-        const invR3 = invR * invR * invR
         
-        // Direct acceleration: a = G * mB * r / r^3 = G * mB / r^2 in direction of r
-        const s = this.config.gravityConstant * starB.mass * invR3
+        // Compute 1/r^n where n = potentialEnergyDegree
+        // For degree n: potential U = -G*m1*m2 / r^(n-1), force = G*m1*m2*(n-1) / r^n
+        let invRN = 1
+        for (let i = 0; i < this.config.potentialEnergyDegree; i++) {
+          invRN *= invR
+        }
+        
+        // Direct acceleration: a = G * mB * (degree-1) / r^degree in direction of r
+        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRN
         ax += dx * s
         ay += dy * s
       }
@@ -654,10 +660,16 @@ export class GravitySimulation {
         const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
         const r = Math.sqrt(r2)
         const invR = 1 / r
-        const invR3 = invR * invR * invR
         
-        // Direct acceleration: a = G * mB * r / r^3 = G * mB / r^2 in direction of r
-        const s = this.config.gravityConstant * starB.mass * invR3
+        // Compute 1/r^n where n = potentialEnergyDegree
+        // For degree n: potential U = -G*m1*m2 / r^(n-1), force = G*m1*m2*(n-1) / r^n
+        let invRN = 1
+        for (let i = 0; i < this.config.potentialEnergyDegree; i++) {
+          invRN *= invR
+        }
+        
+        // Direct acceleration: a = G * mB * (degree-1) / r^degree in direction of r
+        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRN
         ax += dx * s
         ay += dy * s
       }
@@ -786,7 +798,11 @@ export class GravitySimulation {
         }
         const r = Math.sqrt(dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx)
         
-        potential -= (this.config.gravityConstant * starA.mass * starB.mass) / r
+        // Potential: U = -G*m1*m2 / r^(degree-1)
+        // For degree=2: U = -G*m1*m2 / r (current)
+        // For degree=3: U = -G*m1*m2 / r^2
+        const potentialPower = this.config.potentialEnergyDegree - 1
+        potential -= (this.config.gravityConstant * starA.mass * starB.mass) / Math.pow(r, potentialPower)
       }
     }
     

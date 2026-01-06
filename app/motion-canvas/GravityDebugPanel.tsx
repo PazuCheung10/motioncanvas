@@ -206,7 +206,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Core Physics
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: Multiplier for final launch velocity.\nMass Resistance: Reduces launch speed for larger stars (0 = no resistance, 1 = full resistance).\nGravity Constant: G in F = G*m1*m2/r².\nVelocity Damping: Energy loss per frame (0 = energy-conserving, >0 = gradual slowdown).")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: Multiplier for final launch velocity.\nMass Resistance: Reduces launch speed for larger stars (0 = no resistance, 1 = full resistance).\nGravity Constant: G in F = G*m1*m2/r².\nVelocity Damping: Energy loss per frame (0 = energy-conserving, >0 = gradual slowdown).\nPotential Energy Degree: Power law for potential (1-3). Degree 2 = standard 1/r potential.")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -260,6 +260,20 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
                 step="0.000001"
                 value={localConfig.velocityDamping}
                 onChange={(e) => updateConfig('velocityDamping', parseFloat(e.target.value))}
+              />
+            </label>
+            <label>
+              Potential Energy Degree: {localConfig.potentialEnergyDegree}
+              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                Power law: U = -G*m1*m2 / r^(degree-1), F = G*m1*m2*(degree-1) / r^degree
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="1"
+                value={localConfig.potentialEnergyDegree}
+                onChange={(e) => updateConfig('potentialEnergyDegree', parseInt(e.target.value))}
               />
             </label>
           </div>
