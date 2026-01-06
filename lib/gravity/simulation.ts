@@ -312,17 +312,41 @@ export class GravitySimulation {
 
   /**
    * Load stars from universe JSON (positions only, compute velocities)
+   * Automatically centers stars on the canvas
    */
   loadUniverse(universe: { width: number; height: number; stars: Array<{ x: number; y: number; mass: number }> }): void {
     this.stars = []
     
-    const centerX = universe.width / 2
-    const centerY = universe.height / 2
+    // Calculate center of mass of all stars (before shifting)
+    let totalMass = 0
+    let weightedX = 0
+    let weightedY = 0
+    for (const starData of universe.stars) {
+      totalMass += starData.mass
+      weightedX += starData.x * starData.mass
+      weightedY += starData.y * starData.mass
+    }
+    
+    // Calculate offset to center stars on actual canvas
+    const universeCenterX = totalMass > 0 ? weightedX / totalMass : universe.width / 2
+    const universeCenterY = totalMass > 0 ? weightedY / totalMass : universe.height / 2
+    const canvasCenterX = this.width / 2
+    const canvasCenterY = this.height / 2
+    const offsetX = canvasCenterX - universeCenterX
+    const offsetY = canvasCenterY - universeCenterY
+    
+    // Use canvas center for velocity calculations
+    const centerX = canvasCenterX
+    const centerY = canvasCenterY
     
     for (const starData of universe.stars) {
-      // Calculate distance from center
-      const dx = starData.x - centerX
-      const dy = starData.y - centerY
+      // Shift star position to center on canvas
+      const shiftedX = starData.x + offsetX
+      const shiftedY = starData.y + offsetY
+      
+      // Calculate distance from canvas center
+      const dx = shiftedX - centerX
+      const dy = shiftedY - centerY
       const r = Math.sqrt(dx * dx + dy * dy)
       
       if (r < 1e-6) continue // Skip if at center
@@ -350,8 +374,8 @@ export class GravitySimulation {
       const vy = Math.sin(finalAngle) * v
       
       const star = new Star(
-        starData.x,
-        starData.y,
+        shiftedX,
+        shiftedY,
         starData.mass,
         vx,
         vy,
