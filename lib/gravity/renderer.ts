@@ -81,8 +81,10 @@ export class GravityRenderer {
       this.drawCreatingStar(creationState, cursorX, cursorY)
     }
 
-    // Draw comet cursor (on top)
-    this.drawCometCursor(cursorX, cursorY)
+    // Draw comet cursor (on top) - only on non-mobile devices
+    if (!this.isMobileDevice()) {
+      this.drawCometCursor(cursorX, cursorY)
+    }
   }
 
   private drawStar(star: Star): void {
@@ -341,6 +343,15 @@ export class GravityRenderer {
     this.ctx.beginPath()
     this.ctx.arc(x, y, this.config.cometHeadSize, 0, Math.PI * 2)
     this.ctx.fill()
+  }
+
+  private isMobileDevice(): boolean {
+    // Check for touch capability or small screen width
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      (window.innerWidth <= 768)
+    )
   }
 }
 
