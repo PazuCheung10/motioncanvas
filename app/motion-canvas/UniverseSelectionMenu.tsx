@@ -66,83 +66,37 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       const sim = new GravitySimulation(canvasWidth, canvasHeight, config)
       simulationRefs.current[index] = sim
       
-      // Dedicated preview universe - vary based on preset to show differences
-      const centerX = canvasWidth / 2
-      const centerY = canvasHeight / 2
+      // Generate random stars with random positions and masses
+      const numStars = 10 + Math.floor(Math.random() * 5) // 10-14 stars
+      const stars: Array<{ x: number; y: number; mass: number }> = []
+      const margin = 20 // Keep stars away from edges
       
-      // Adjust preview universe based on preset type to show visual differences
-      let centralMass = 200
-      let starDistances = [30, 45, 35, 40]
-      
-      if (preset.name === 'Tight Orbits') {
-        centralMass = 300
-        starDistances = [20, 30, 25, 28] // Closer orbits
-      } else if (preset.name === 'Wide Orbits') {
-        centralMass = 150
-        starDistances = [40, 55, 45, 50] // Farther orbits
-      } else if (preset.name === 'N-Body Chaos') {
-        centralMass = 200
-        starDistances = [25, 35, 30, 32] // Different arrangement for chaos
+      for (let i = 0; i < numStars; i++) {
+        // Random position with margin
+        const x = margin + Math.random() * (canvasWidth - 2 * margin)
+        const y = margin + Math.random() * (canvasHeight - 2 * margin)
+        
+        // Random mass between 5 and 50
+        const mass = 5 + Math.random() * 45
+        
+        stars.push({ x, y, mass })
       }
       
       sim.loadUniverse({
         width: canvasWidth,
         height: canvasHeight,
-        stars: [
-          {
-            // Central mass - offset slightly so it's not skipped by loadUniverse
-            x: centerX + 0.1,
-            y: centerY + 0.1,
-            mass: centralMass
-          },
-          {
-            x: centerX + starDistances[0],
-            y: centerY,
-            mass: 5
-          },
-          {
-            x: centerX,
-            y: centerY + starDistances[1],
-            mass: 8
-          },
-          {
-            x: centerX - starDistances[2],
-            y: centerY,
-            mass: 6
-          },
-          {
-            x: centerX,
-            y: centerY - starDistances[3],
-            mass: 7
-          }
-        ]
+        stars: stars
       })
       
-      // After loadUniverse, manually adjust velocities for visible orbits (preview-only)
-      // loadUniverse calculates velocities, but we override for better visibility
-      sim.stars.forEach((star, i) => {
-        // Find the central mass (largest mass, closest to center)
-        const isCentral = star.mass > 100
-        if (isCentral) {
-          // Keep central mass at center with no velocity
-          star.x = centerX
-          star.y = centerY
-          star.vx = 0
-          star.vy = 0
-          star.vxHalf = 0
-          star.vyHalf = 0
-        } else {
-        // Give orbiting stars visible orbital velocities
-        const dx = star.x - centerX
-        const dy = star.y - centerY
-        const angle = Math.atan2(dy, dx)
-        const speed = 25 + i * 2 // Vary speeds for visual interest
-        // Perpendicular velocity for circular orbit
-        star.vx = -Math.sin(angle) * speed
-        star.vy = Math.cos(angle) * speed
+      // Give stars random initial velocities for interesting motion
+      sim.stars.forEach((star) => {
+        // Random velocity direction and magnitude
+        const angle = Math.random() * Math.PI * 2
+        const speed = 10 + Math.random() * 30 // Random speed between 10-40
+        star.vx = Math.cos(angle) * speed
+        star.vy = Math.sin(angle) * speed
         star.vxHalf = star.vx
         star.vyHalf = star.vy
-        }
       })
     })
     
@@ -170,8 +124,8 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         if (!ctx) return
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         
-        // Slow down thumbnails for better visibility (much slower for clearer preview)
-        sim.update(0.003) // Very slow speed for preview thumbnails (about 0.2x normal speed)
+        // Normal speed for thumbnails
+        sim.update(0.008) // Normal preview speed
         
         // Clear and draw background
         ctx.fillStyle = '#000'
