@@ -42,17 +42,26 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
 
   // Initialize preview simulations
   useEffect(() => {
-    previewRefs.current = []
-    simulationRefs.current = []
+    // React StrictMode runs effects twice in dev — guard so you don't start 2 RAF loops
+    if (animationFrameRef.current !== null) return
     
-    // Use fixed canvas size like the original working version
     const canvasWidth = 160
     const canvasHeight = 120
+    
+    // DON'T wipe previewRefs here — React owns ref timing.
+    // Just rebuild sims.
+    simulationRefs.current = new Array(UNIVERSE_PRESETS.length).fill(null)
     
     UNIVERSE_PRESETS.forEach((preset, index) => {
       const config: GravityConfig = {
         ...currentConfig,
-        ...preset.config
+        ...preset.config,
+        
+        // Preview-only stability overrides
+        enableMerging: false,
+        enableBoundaryWrapping: false,
+        gravityConstant: 4000,
+        softeningEpsPx: 3,
       }
       
       const sim = new GravitySimulation(canvasWidth, canvasHeight, config)
@@ -110,16 +119,16 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
           star.vxHalf = 0
           star.vyHalf = 0
         } else {
-          // Give orbiting stars visible orbital velocities
-          const dx = star.x - centerX
-          const dy = star.y - centerY
-          const angle = Math.atan2(dy, dx)
-          const speed = 25 + (i * 2) // Vary speeds for visual interest
-          // Perpendicular velocity for circular orbit
-          star.vx = -Math.sin(angle) * speed
-          star.vy = Math.cos(angle) * speed
-          star.vxHalf = star.vx
-          star.vyHalf = star.vy
+        // Give orbiting stars visible orbital velocities
+        const dx = star.x - centerX
+        const dy = star.y - centerY
+        const angle = Math.atan2(dy, dx)
+        const speed = 25 + i * 2 // Vary speeds for visual interest
+        // Perpendicular velocity for circular orbit
+        star.vx = -Math.sin(angle) * speed
+        star.vy = Math.cos(angle) * speed
+        star.vxHalf = star.vx
+        star.vyHalf = star.vy
         }
       })
     })
@@ -133,21 +142,32 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         // Skip this frame if refs not ready (they'll be available next frame)
         if (!sim || !canvas) return
         
-        // Ensure canvas has correct size
-        if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
-          canvas.width = canvasWidth
-          canvas.height = canvasHeight
+        // Match DPR so it's visible/crisp
+        const dpr = window.devicePixelRatio || 1
+        const w = canvasWidth
+        const h = canvasHeight
+        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+          canvas.width = w * dpr
+          canvas.height = h * dpr
+          canvas.style.width = `${w}px`
+          canvas.style.height = `${h}px`
         }
         
-        sim.update(0.016) // ~60fps - physics update (DO NOT MODIFY)
         const ctx = canvas.getContext('2d')
         if (!ctx) return
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        
+        sim.update(0.016) // ~60fps - physics update (DO NOT MODIFY)
         
         // Clear and draw background
-        ctx.fillStyle = '#000000'
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, w, h)
         
         // Render stars
+        ctx.fillStyle = '#fff'
+        ctx.shadowBlur = 6
+        ctx.shadowColor = 'rgba(255,255,255,0.9)'
+        
         sim.stars.forEach((star) => {
           // Guard positions against NaN/undefined
           const x = Number.isFinite(star.x) ? star.x : 0
@@ -157,11 +177,6 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
           const baseRadius = Number.isFinite(star.radius) ? star.radius : 1
           const r = Math.max(2, baseRadius * 1.5)
           
-          // Boost star brightness with stronger glow for contrast
-          ctx.fillStyle = '#ffffff'
-          ctx.shadowBlur = 6
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'
-          
           ctx.beginPath()
           ctx.arc(x, y, r, 0, Math.PI * 2)
           ctx.fill()
@@ -169,28 +184,12 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         
         // Reset shadow after stars
         ctx.shadowBlur = 0
-        
-        // Render central sun if it exists
-        if (sim.centralSun) {
-          const sunX = Number.isFinite(sim.centralSun.x) ? sim.centralSun.x : canvasWidth / 2
-          const sunY = Number.isFinite(sim.centralSun.y) ? sim.centralSun.y : canvasHeight / 2
-          const baseSunRadius = Number.isFinite(sim.centralSun.radius) ? sim.centralSun.radius : 2
-          const sunRadius = Math.max(3, baseSunRadius * 1.5)
-          
-          ctx.fillStyle = '#ffff00'
-          ctx.beginPath()
-          ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2)
-          ctx.fill()
-        }
       })
       
       animationFrameRef.current = requestAnimationFrame(animate)
     }
     
-    // Defer animation start until next frame to ensure refs are ready
-    requestAnimationFrame(() => {
-      animate()
-    })
+    animationFrameRef.current = requestAnimationFrame(animate)
     
     return () => {
       if (animationFrameRef.current !== null) {
@@ -198,7 +197,9 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         animationFrameRef.current = null
       }
     }
-  }, [currentConfig])
+    // Do NOT depend on currentConfig - previews should be independent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSelectPreset = (index: number) => {
     const preset = UNIVERSE_PRESETS[index]
@@ -238,9 +239,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
                 <div className={styles.preview}>
                   <canvas
                     ref={(el) => {
-                      if (el) {
-                        previewRefs.current[index] = el
-                      }
+                      previewRefs.current[index] = el
                     }}
                     width={160}
                     height={120}

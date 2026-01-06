@@ -622,9 +622,9 @@ export class GravitySimulation {
         const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
         const r = Math.sqrt(r2)
         const invR = 1 / r
-        const invR2 = invR * invR
+        const invR3 = invR * invR * invR
         
-        const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR2
+        const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
         const fx = dx * forceMagnitude
         const fy = dy * forceMagnitude
         
