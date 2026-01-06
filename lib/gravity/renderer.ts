@@ -7,6 +7,9 @@ export class GravityRenderer {
   private canvas: HTMLCanvasElement
   private config: GravityConfig
   private cursorTrail: Array<{ x: number; y: number; opacity: number }> = []
+  private scale: number = 1.0
+  private referenceWidth: number = 1920
+  private referenceHeight: number = 1080
 
   constructor(canvas: HTMLCanvasElement, config: GravityConfig) {
     this.canvas = canvas
@@ -19,6 +22,9 @@ export class GravityRenderer {
     
     // Hide native cursor
     this.canvas.style.cursor = 'none'
+    
+    // Calculate initial scale
+    this.updateScale()
   }
 
   updateConfig(config: GravityConfig): void {
@@ -28,6 +34,20 @@ export class GravityRenderer {
   resize(width: number, height: number): void {
     this.canvas.width = width
     this.canvas.height = height
+    this.updateScale()
+  }
+
+  private updateScale(): void {
+    const width = this.canvas.width || window.innerWidth
+    const height = this.canvas.height || window.innerHeight
+    
+    // Calculate scale based on the smaller dimension to ensure everything fits
+    const scaleX = width / this.referenceWidth
+    const scaleY = height / this.referenceHeight
+    this.scale = Math.min(scaleX, scaleY)
+    
+    // Clamp scale to reasonable bounds (don't scale up beyond 1.0, but allow down to 0.3)
+    this.scale = Math.max(0.3, Math.min(1.0, this.scale))
   }
 
   updateCursorTrail(x: number, y: number): void {
@@ -88,12 +108,15 @@ export class GravityRenderer {
   }
 
   private drawStar(star: Star): void {
+    // Apply scale to star radius
+    const scaledRadius = star.radius * this.scale
+    
     // Glow size based on mass - bigger stars glow more
-    const baseGlow = star.radius * 1.5
+    const baseGlow = scaledRadius * 1.5
     const glowMultiplier = this.config.radiusScale !== 1.0 
       ? this.config.glowRadiusMultiplier / this.config.radiusScale 
       : this.config.glowRadiusMultiplier
-    const massGlow = star.mass * glowMultiplier
+    const massGlow = star.mass * glowMultiplier * this.scale
     const glowRadius = baseGlow + massGlow
     
     const opacity = Math.min(1.0, star.mass * this.config.opacityMultiplier)
@@ -114,7 +137,7 @@ export class GravityRenderer {
     this.ctx.globalAlpha = opacity
     this.ctx.fillStyle = '#ffffff'
     this.ctx.beginPath()
-    this.ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2)
+    this.ctx.arc(star.x, star.y, scaledRadius, 0, Math.PI * 2)
     this.ctx.fill()
     this.ctx.globalAlpha = 1.0
   }
@@ -124,7 +147,7 @@ export class GravityRenderer {
 
     const now = performance.now() / 1000
     this.ctx.strokeStyle = '#ffffff'
-    this.ctx.lineWidth = 1
+    this.ctx.lineWidth = 1 * this.scale
     this.ctx.lineCap = 'round'
     this.ctx.lineJoin = 'round'
 
@@ -164,17 +187,18 @@ export class GravityRenderer {
     vCirc?: number
     vEsc?: number
   }, cursorX: number, cursorY: number): void {
-    const radius = state.radius
+    // Apply scale to radius
+    const scaledRadius = state.radius * this.scale
     
     // Reverse the radius calculation to get mass for glow
     const radiusPower = this.config.radiusPower || 0.5
-    const mass = Math.pow((radius * 2) / this.config.radiusScale, 1 / radiusPower)
+    const mass = Math.pow((state.radius * 2) / this.config.radiusScale, 1 / radiusPower)
     
-    const baseGlow = radius * 1.5
+    const baseGlow = scaledRadius * 1.5
     const glowMultiplier = this.config.radiusScale !== 1.0 
       ? this.config.glowRadiusMultiplier / this.config.radiusScale 
       : this.config.glowRadiusMultiplier
-    const massGlow = mass * glowMultiplier
+    const massGlow = mass * glowMultiplier * this.scale
     const glowRadius = baseGlow + massGlow
     
     const opacity = Math.min(1.0, mass * this.config.opacityMultiplier)
@@ -194,7 +218,7 @@ export class GravityRenderer {
     this.ctx.globalAlpha = opacity
     this.ctx.fillStyle = '#ffffff'
     this.ctx.beginPath()
-    this.ctx.arc(state.x, state.y, radius, 0, Math.PI * 2)
+    this.ctx.arc(state.x, state.y, scaledRadius, 0, Math.PI * 2)
     this.ctx.fill()
     this.ctx.globalAlpha = 1.0
 
@@ -207,16 +231,16 @@ export class GravityRenderer {
       const dist = Math.sqrt(dx * dx + dy * dy)
       
       if (dist > 2) {
-        const dirLen = Math.min(50, state.estimatedVelocity * 0.1)
+        const dirLen = Math.min(50, state.estimatedVelocity * 0.1) * this.scale
         this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
-        this.ctx.lineWidth = 2
+        this.ctx.lineWidth = 2 * this.scale
         this.ctx.beginPath()
         this.ctx.moveTo(state.x, state.y)
         this.ctx.lineTo(state.x + (dx / dist) * dirLen, state.y + (dy / dist) * dirLen)
         this.ctx.stroke()
         
         // Arrowhead
-        const arrowLen = 8
+        const arrowLen = 8 * this.scale
         const angle = Math.atan2(dy, dx)
         this.ctx.beginPath()
         this.ctx.moveTo(
@@ -242,21 +266,21 @@ export class GravityRenderer {
     // Debug info
     this.ctx.save()
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-    this.ctx.font = '12px monospace'
+    this.ctx.font = `${12 * this.scale}px monospace`
     this.ctx.textAlign = 'left'
     this.ctx.textBaseline = 'top'
     
-    const infoY = state.y + radius + 15
-    let lineHeight = 16
+    const infoY = state.y + scaledRadius + 15 * this.scale
+    let lineHeight = 16 * this.scale
     let currentY = infoY
     
     // Mass
-    this.ctx.fillText(`Mass: ${state.mass.toFixed(1)}`, state.x + radius + 10, currentY)
+    this.ctx.fillText(`Mass: ${state.mass.toFixed(1)}`, state.x + scaledRadius + 10 * this.scale, currentY)
     currentY += lineHeight
     
     // Estimated velocity
     if (state.estimatedVelocity > 0) {
-      this.ctx.fillText(`Velocity: ${state.estimatedVelocity.toFixed(1)} px/s`, state.x + radius + 10, currentY)
+      this.ctx.fillText(`Velocity: ${state.estimatedVelocity.toFixed(1)} px/s`, state.x + scaledRadius + 10 * this.scale, currentY)
       currentY += lineHeight
       
       // Orbital speeds
@@ -268,15 +292,15 @@ export class GravityRenderer {
         else color = 'rgba(100, 255, 100, 0.9)' // Good
         
         this.ctx.fillStyle = color
-        this.ctx.fillText(`v_circ: ${state.vCirc.toFixed(1)} px/s`, state.x + radius + 10, currentY)
+        this.ctx.fillText(`v_circ: ${state.vCirc.toFixed(1)} px/s`, state.x + scaledRadius + 10 * this.scale, currentY)
         currentY += lineHeight
         
         if (state.vEsc !== undefined) {
-          this.ctx.fillText(`v_esc: ${state.vEsc.toFixed(1)} px/s`, state.x + radius + 10, currentY)
+          this.ctx.fillText(`v_esc: ${state.vEsc.toFixed(1)} px/s`, state.x + scaledRadius + 10 * this.scale, currentY)
           currentY += lineHeight
           
           this.ctx.fillStyle = 'rgba(200, 200, 255, 0.9)'
-          this.ctx.fillText(`Ratio: ${ratio.toFixed(2)}x`, state.x + radius + 10, currentY)
+          this.ctx.fillText(`Ratio: ${ratio.toFixed(2)}x`, state.x + scaledRadius + 10 * this.scale, currentY)
         }
       }
     }
@@ -289,11 +313,11 @@ export class GravityRenderer {
     const progress = age / ripple.duration
     if (progress >= 1) return
 
-    const radius = ripple.maxRadius * progress
+    const radius = ripple.maxRadius * progress * this.scale
     const opacity = (1 - progress) * 0.4
 
     this.ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = 2 * this.scale
     this.ctx.beginPath()
     this.ctx.arc(ripple.x, ripple.y, radius, 0, Math.PI * 2)
     this.ctx.stroke()
@@ -304,7 +328,7 @@ export class GravityRenderer {
 
     if (this.cursorTrail.length > 1) {
       this.ctx.strokeStyle = '#ffffff'
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = 2 * this.scale
       this.ctx.lineCap = 'round'
       this.ctx.lineJoin = 'round'
 
@@ -325,9 +349,10 @@ export class GravityRenderer {
     }
 
     // Cursor head
+    const scaledHeadGlow = this.config.cometHeadGlow * this.scale
     const headGradient = this.ctx.createRadialGradient(
       x, y, 0,
-      x, y, this.config.cometHeadGlow
+      x, y, scaledHeadGlow
     )
     headGradient.addColorStop(0, `rgba(255, 255, 255, ${this.config.cometTailOpacity})`)
     headGradient.addColorStop(0.5, `rgba(255, 255, 255, ${this.config.cometTailOpacity * 0.5})`)
@@ -335,13 +360,13 @@ export class GravityRenderer {
 
     this.ctx.fillStyle = headGradient
     this.ctx.beginPath()
-    this.ctx.arc(x, y, this.config.cometHeadGlow, 0, Math.PI * 2)
+    this.ctx.arc(x, y, scaledHeadGlow, 0, Math.PI * 2)
     this.ctx.fill()
 
     this.ctx.globalAlpha = 1.0
     this.ctx.fillStyle = '#ffffff'
     this.ctx.beginPath()
-    this.ctx.arc(x, y, this.config.cometHeadSize, 0, Math.PI * 2)
+    this.ctx.arc(x, y, this.config.cometHeadSize * this.scale, 0, Math.PI * 2)
     this.ctx.fill()
   }
 
