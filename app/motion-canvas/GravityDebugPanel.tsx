@@ -92,7 +92,9 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
                 top: `${tooltip.y}px`,
               }}
             >
-              {tooltip.text}
+              {tooltip.text.split('\n').map((line, i) => (
+                <div key={i}>{line.trim()}</div>
+              ))}
             </div>
           )}
           <div className={styles.info}>
@@ -204,7 +206,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Core Physics
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: Multiplier for final launch velocity. Mass Resistance: Reduces launch speed for larger stars (0 = no resistance, 1 = full resistance). Gravity Constant: G in F = G*m1*m2/r². Velocity Damping: Energy loss per frame (0 = energy-conserving, >0 = gradual slowdown).")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: Multiplier for final launch velocity.\nMass Resistance: Reduces launch speed for larger stars (0 = no resistance, 1 = full resistance).\nGravity Constant: G in F = G*m1*m2/r².\nVelocity Damping: Energy loss per frame (0 = energy-conserving, >0 = gradual slowdown).")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -267,7 +269,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Gravity Softening
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Plummer Softening: Prevents infinite forces at r=0 by using r² = dx² + dy² + eps². Larger eps = smoother forces but less accurate. Max Force: Clamps acceleration to prevent numerical explosions (0 = disabled, breaks energy conservation).")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Plummer Softening: Prevents infinite forces at r=0 by using r² = dx² + dy² + eps². Larger eps = smoother forces but less accurate.\nMax Force: Clamps acceleration to prevent numerical explosions (0 = disabled, breaks energy conservation).")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -308,7 +310,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Launch Velocity
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Window: Time window to measure cursor speed. S0: Speed compressor scale. Vmax: Maximum compressed speed.")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Window: Time window to measure cursor speed.\nS0: Speed compressor scale.\nVmax: Maximum compressed speed.")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -354,7 +356,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Mass Growth
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Hold to Max: Time to hold mouse/touch to reach maximum mass. Min/Max Mass: Mass range for created stars. Radius Scale: Multiplier for radius calculation. Radius Power: Exponent in radius = mass^power × scale (0.5 = 2D area scaling, 0.333 = 3D volume scaling).")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Hold to Max: Time to hold mouse/touch to reach maximum mass.\nMin/Max Mass: Mass range for created stars.\nRadius Scale: Multiplier for radius calculation.\nRadius Power: Exponent in radius = mass^power × scale (0.5 = 2D area scaling, 0.333 = 3D volume scaling).")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -428,7 +430,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Angular Guidance (Launch Assist Only)
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Guidance Strength: Rotates launch velocity toward tangential direction (0 = no guidance, 1 = pure tangential). Preserves energy and angular momentum. Radial Clamp: Reduces excessive radial velocity at launch. Search Radius: Distance to search for nearest massive star to compute orbital center.")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Guidance Strength: Rotates launch velocity toward tangential direction (0 = no guidance, 1 = pure tangential). Preserves energy and angular momentum.\nRadial Clamp: Reduces excessive radial velocity at launch.\nSearch Radius: Distance to search for nearest massive star to compute orbital center.")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?
@@ -480,7 +482,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               Visual
               <span 
                 className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Glow Radius Multiplier: Controls star glow size (glow = baseGlow + mass × multiplier). Opacity Multiplier: Controls star opacity (opacity = mass × multiplier, clamped 0-1).")}
+                onMouseEnter={(e) => handleHelpMouseEnter(e, "Glow Radius Multiplier: Controls star glow size (glow = baseGlow + mass × multiplier).\nOpacity Multiplier: Controls star opacity (opacity = mass × multiplier, clamped 0-1).")}
                 onMouseLeave={handleHelpMouseLeave}
               >
                 ?

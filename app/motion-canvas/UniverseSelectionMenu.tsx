@@ -46,21 +46,28 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
     simulationRefs.current = []
     animationFrameRefs.current = []
     
+    const getCanvasSize = () => {
+      const isMobile = window.innerWidth <= 768
+      return { width: isMobile ? 80 : 160, height: isMobile ? 60 : 120 }
+    }
+    
+    const { width: canvasWidth, height: canvasHeight } = getCanvasSize()
+    
     UNIVERSE_PRESETS.forEach((preset, index) => {
       const config: GravityConfig = {
         ...currentConfig,
         ...preset.config
       }
       
-      const sim = new GravitySimulation(160, 120, config)
+      const sim = new GravitySimulation(canvasWidth, canvasHeight, config)
       simulationRefs.current[index] = sim
       
       sim.loadUniverse({
-        width: 160,
-        height: 120,
+        width: canvasWidth,
+        height: canvasHeight,
         stars: initialUniverse.stars.map(s => ({
-          x: s.x * (160 / initialUniverse.width),
-          y: s.y * (120 / initialUniverse.height),
+          x: s.x * (canvasWidth / initialUniverse.width),
+          y: s.y * (canvasHeight / initialUniverse.height),
           mass: s.mass
         }))
       })
@@ -72,11 +79,18 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         const sim = simulationRefs.current[index]
         const canvas = previewRefs.current[index]
         if (sim && canvas) {
+          const { width, height } = getCanvasSize()
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width
+            canvas.height = height
+            sim.resize(width, height)
+          }
+          
           sim.update(0.016) // ~60fps
           const ctx = canvas.getContext('2d')
           if (ctx) {
             ctx.fillStyle = '#0a0a0a'
-            ctx.fillRect(0, 0, 160, 120)
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
             // Simple star rendering for preview
             sim.stars.forEach(star => {
               ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(star.mass / 50, 1)})`
@@ -140,10 +154,11 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
                     ref={(el) => {
                       if (el) {
                         previewRefs.current[index] = el
+                        const isMobile = window.innerWidth <= 768
+                        el.width = isMobile ? 80 : 160
+                        el.height = isMobile ? 60 : 120
                       }
                     }}
-                    width={160}
-                    height={120}
                   />
                 </div>
                 <div className={styles.cardInfo}>

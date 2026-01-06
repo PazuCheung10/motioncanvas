@@ -11,7 +11,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  cursor: default; /* ✅ 修復游標消失問題 */
+  cursor: default;
 }
 
 .title {
@@ -29,5 +29,13 @@
 
 .title.fadeOut {
   opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .title {
+    top: 12px;
+    left: 12px;
+    font-size: 10px;
+  }
 }
 

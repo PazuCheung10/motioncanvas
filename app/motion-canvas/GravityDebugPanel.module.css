@@ -9,6 +9,12 @@
   will-change: transform;
 }
 
+@media (max-width: 768px) {
+  .panelContainer {
+    font-size: 9px;
+  }
+}
+
 .toggleButton {
   background: rgba(20, 20, 20, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -53,6 +59,18 @@
   gap: 12px;
   cursor: default;
   pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 40vh;
+    padding: 8px;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    font-size: 10px;
+  }
 }
 
 .panel::-webkit-scrollbar {
@@ -105,6 +123,23 @@
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
   cursor: default;
+}
+
+@media (max-width: 768px) {
+  .section {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+  
+  .section h3 {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+  
+  .section label {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
 }
 
 .section label:last-child {
@@ -231,6 +266,18 @@
   transition: all 0.2s;
 }
 
+@media (max-width: 768px) {
+  .controlButton {
+    min-width: 80px;
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  
+  .controlsRow {
+    gap: 4px;
+  }
+}
+
 .controlButton:hover {
   opacity: 0.9;
   transform: translateY(-1px);
@@ -243,7 +290,7 @@
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 10px;
-  line-height: 1.4;
+  line-height: 1.6;
   max-width: 300px;
   z-index: 10001;
   pointer-events: none;
@@ -253,5 +300,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   white-space: normal;
   word-wrap: break-word;
+}
+
+.tooltip > div {
+  margin-bottom: 4px;
+}
+
+.tooltip > div:last-child {
+  margin-bottom: 0;
 }
 
