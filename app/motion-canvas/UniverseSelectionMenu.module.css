@@ -9,8 +9,17 @@
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  backdrop-filter: blur(10px);
   cursor: default;
+}
+
+/* Apply backdrop blur only to overlay background, not canvas children */
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .menu {
@@ -116,6 +125,17 @@
   border-radius: 4px;
   margin-bottom: 12px;
   overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure canvas is not affected by any filters or opacity */
+.preview canvas {
+  position: relative;
+  z-index: 3;
+  filter: none;
+  backdrop-filter: none;
+  opacity: 1;
 }
 
 .cardInfo h4 {
