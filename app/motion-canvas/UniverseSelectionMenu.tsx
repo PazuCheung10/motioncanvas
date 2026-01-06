@@ -46,12 +46,9 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
     simulationRefs.current = []
     animationFrameRefs.current = []
     
-    const getCanvasSize = () => {
-      const isMobile = window.innerWidth <= 768
-      return { width: isMobile ? 80 : 160, height: isMobile ? 60 : 120 }
-    }
-    
-    const { width: canvasWidth, height: canvasHeight } = getCanvasSize()
+    // Use fixed canvas size like the original working version
+    const canvasWidth = 160
+    const canvasHeight = 120
     
     UNIVERSE_PRESETS.forEach((preset, index) => {
       const config: GravityConfig = {
@@ -73,34 +70,23 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       })
     })
     
-    // Animation loop
+    // Animation loop - simplified like original, but with visibility improvements
     const animate = () => {
       UNIVERSE_PRESETS.forEach((preset, index) => {
         const sim = simulationRefs.current[index]
         const canvas = previewRefs.current[index]
         if (sim && canvas) {
-          const { width, height } = getCanvasSize()
-          const dpr = window.devicePixelRatio || 1
-          
-          // Handle devicePixelRatio for Retina/mobile screens
-          if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
-            canvas.width = width * dpr
-            canvas.height = height * dpr
-            canvas.style.width = `${width}px`
-            canvas.style.height = `${height}px`
-            sim.resize(width, height) // Simulation uses logical size
+          // Ensure canvas has correct size (should be set by JSX, but double-check)
+          if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+            canvas.width = canvasWidth
+            canvas.height = canvasHeight
           }
           
           sim.update(0.016) // ~60fps - physics update (DO NOT MODIFY)
           const ctx = canvas.getContext('2d')
           if (ctx) {
-            // Scale context for devicePixelRatio
-            ctx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform
-            ctx.scale(dpr, dpr)
-            
-            // Darker background for better contrast
-            ctx.fillStyle = '#000000'
-            ctx.fillRect(0, 0, width, height)
+            ctx.fillStyle = '#000000' // Darker background for better contrast
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight)
             
             // Preview-only rendering with exaggerated visibility
             sim.stars.forEach(star => {
@@ -186,16 +172,10 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
                     ref={(el) => {
                       if (el) {
                         previewRefs.current[index] = el
-                        const isMobile = window.innerWidth <= 768
-                        const width = isMobile ? 80 : 160
-                        const height = isMobile ? 60 : 120
-                        const dpr = window.devicePixelRatio || 1
-                        el.width = width * dpr
-                        el.height = height * dpr
-                        el.style.width = `${width}px`
-                        el.style.height = `${height}px`
                       }
                     }}
+                    width={160}
+                    height={120}
                   />
                 </div>
                 <div className={styles.cardInfo}>
