@@ -193,6 +193,8 @@ export const GRAVITY_CONFIG: GravityConfig = {
   enableOrbitTrails: false,
   orbitTrailFadeTime: 1.0,
   enableBoundaryWrapping: true, // Default to true for torus physics
+  // WARNING: For physics validation, set enableBoundaryWrapping = false
+  // Wrapping implements torus topology (NOT Newtonian free space) and breaks energy conservation
   
   // DEPRECATED (kept for compatibility)
   maxStarSize: MAX_STAR_SIZE,

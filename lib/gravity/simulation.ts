@@ -1,3 +1,23 @@
+/**
+ * Gravity Simulation with Velocity Verlet Integrator
+ * 
+ * PHYSICS VALIDATION REQUIREMENTS:
+ * For accurate energy conservation and orbital stability testing:
+ * 1. Set enableMerging = false (merging is inelastic, non-Hamiltonian)
+ * 2. Set enableBoundaryWrapping = false (wrapping implements torus topology, not Newtonian free space)
+ * 3. Use fixed timestep (already implemented via accumulator pattern)
+ * 4. Two-body system should maintain constant energy and closed orbits
+ * 
+ * CONCEPTUAL SWITCHES:
+ * - enableMerging: Intentional inelastic collision (gameplay feature, NOT physics validation)
+ * - enableBoundaryWrapping: 2D torus universe (NOT Newtonian free space)
+ * 
+ * INTEGRATOR:
+ * - Velocity Verlet (symplectic, energy-conserving for Hamiltonian systems)
+ * - Fixed timestep with accumulator pattern
+ * - vxHalf/vyHalf are persistent state variables (never synced to vx/vy during integration)
+ */
+
 import { GravityConfig, PhysicsMode } from './config'
 import { Star } from './star'
 
@@ -263,13 +283,16 @@ export class GravitySimulation {
   } | null = null
   
   // Energy diagnostics
+  // Separates integrator drift (numerical error) from merge-induced energy loss (intentional gameplay)
   energyStats: {
     kinetic: number
     potential: number
     total: number
     history: number[] // Last 100 values for trend analysis
-    trend: 'stable' | 'decreasing' | 'increasing' // Energy trend
-    mergeEvents: Array<{ frame: number; energyPreMerge: number; energyPostMerge: number; deltaEnergy: number }> // Track merge energy changes
+    trend: 'stable' | 'decreasing' | 'increasing' // Energy trend (excluding merge events)
+    mergeEvents: Array<{ frame: number; energyPreMerge: number; energyPostMerge: number; deltaEnergy: number }> // Track merge energy changes (inelastic collisions)
+    integratorDrift: number // Cumulative energy change from integrator (excluding merges)
+    lastEnergyBeforeMerge: number | null // Energy before last merge (for drift calculation)
   } | null = null
 
   constructor(width: number, height: number, config: GravityConfig) {
@@ -616,6 +639,9 @@ export class GravitySimulation {
     this.energyStats = null
   }
 
+  // Fixed timestep accumulator for symplectic integration
+  private timeAccumulator: number = 0
+  
   update(deltaTime: number): void {
     // Update ripples (non-physics updates)
     const now = performance.now() / 1000
@@ -624,16 +650,15 @@ export class GravitySimulation {
       return age < ripple.duration
     })
     
-    // Substep loop: break large deltaTime into smaller steps for numerical stability
-    const maxDt = this.config.physicsMode === PhysicsMode.ORBIT_PLAYGROUND ? 0.01 : 0.1
-    let remainingTime = deltaTime
-    let frameCount = 0
+    // Fixed timestep accumulator pattern for symplectic properties
+    // This ensures dt is constant, preserving energy conservation
+    const fixedDt = this.config.physicsMode === PhysicsMode.ORBIT_PLAYGROUND ? 0.01 : 0.1
+    this.timeAccumulator += deltaTime
     
-    while (remainingTime > 0) {
-      const dt = Math.min(remainingTime, maxDt)
-      this.step(dt)
-      remainingTime -= dt
-      frameCount++
+    // Step with fixed dt until accumulator is depleted
+    while (this.timeAccumulator >= fixedDt) {
+      this.step(fixedDt)
+      this.timeAccumulator -= fixedDt
     }
     
     // Update energy diagnostics after all substeps
@@ -642,11 +667,19 @@ export class GravitySimulation {
   
   /**
    * Single physics step with fixed timestep dt
-   * Performs one complete leapfrog integration step
+   * Performs one complete Velocity Verlet integration step
+   * 
+   * Velocity Verlet algorithm:
+   * 1. v(t+dt/2) = v(t) + a(t) * dt/2
+   * 2. x(t+dt) = x(t) + v(t+dt/2) * dt
+   * 3. Compute a(t+dt) from x(t+dt)
+   * 4. v(t+dt) = v(t+dt/2) + a(t+dt) * dt/2
+   * 
+   * This is symplectic and conserves energy for Hamiltonian systems.
    */
   step(dt: number): void {
-    // LEAPFROG INTEGRATOR: Two-pass update
-    // Pass 1: Compute accelerations and apply first kick + drift
+    // VELOCITY VERLET INTEGRATOR: Two-pass update
+    // Pass 1: Compute accelerations at current positions and apply first half-step
     const accelerations: Array<{ ax: number; ay: number }> = []
     
     for (let i = 0; i < this.stars.length; i++) {
@@ -654,177 +687,101 @@ export class GravitySimulation {
       let ax = 0
       let ay = 0
       
-      if (this.config.physicsMode === PhysicsMode.ORBIT_PLAYGROUND) {
-        // ORBIT_PLAYGROUND: Full pairwise gravity (all stars attract each other)
-        // All stars attract each other
-        for (let j = 0; j < this.stars.length; j++) {
-          if (i === j) continue
-          const starB = this.stars[j]
-          
-          // Use minimum-image convention ONLY if boundary wrapping is enabled
-          let dx = starB.x - starA.x
-          let dy = starB.y - starA.y
-          if (this.config.enableBoundaryWrapping) {
-            dx = minImageDelta(dx, this.width)
-            dy = minImageDelta(dy, this.height)
-          }
-          const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
-          const r = Math.sqrt(r2)
-          const invR = 1 / r
-          const invR3 = invR * invR * invR
-          // Pure Plummer-softened gravity: F = G*m1*m2 * (dx,dy) / (r^2 + eps^2)^(3/2)
-          // This is the gradient of U = -G*m1*m2 / sqrt(r^2 + eps^2)
-          // Force is conservative and Hamiltonian-consistent
-          const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
-          const fx = dx * forceMagnitude
-          const fy = dy * forceMagnitude
-          
-          // Apply acceleration (no force modification - pure potential gradient)
-          ax += fx / starA.mass
-          ay += fy / starA.mass
+      // Compute acceleration from all other stars
+      // Both modes use full pairwise gravity (no central sun)
+      for (let j = 0; j < this.stars.length; j++) {
+        if (i === j) continue
+        const starB = this.stars[j]
+        
+        // Use minimum-image convention ONLY if boundary wrapping is enabled
+        // WARNING: Wrapping breaks energy conservation - disable for physics validation
+        let dx = starB.x - starA.x
+        let dy = starB.y - starA.y
+        if (this.config.enableBoundaryWrapping) {
+          dx = minImageDelta(dx, this.width)
+          dy = minImageDelta(dy, this.height)
         }
-      } else {
-        // N_BODY_CHAOS: Full pairwise gravity with minimum-image convention
-        for (let j = 0; j < this.stars.length; j++) {
-          if (i === j) continue
-          
-          const starB = this.stars[j]
-          
-          // Use minimum-image convention ONLY if boundary wrapping is enabled
-          let dx = starB.x - starA.x
-          let dy = starB.y - starA.y
-          if (this.config.enableBoundaryWrapping) {
-            dx = minImageDelta(dx, this.width)
-            dy = minImageDelta(dy, this.height)
-          }
-          
-          // Plummer softening: r² = dx² + dy² + eps²
-          const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
-          const invR = 1 / Math.sqrt(r2)
-          const invR3 = invR * invR * invR
-          
-          // Pure Plummer-softened gravity: F = G*m1*m2 * (dx,dy) / (r^2 + eps^2)^(3/2)
-          // This is the gradient of U = -G*m1*m2 / sqrt(r^2 + eps^2)
-          // Force is conservative and Hamiltonian-consistent
-          // NOTE: Force clamping removed - it breaks energy conservation by making force non-conservative
-          const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
-          const fx = dx * forceMagnitude
-          const fy = dy * forceMagnitude
-          
-          // Apply acceleration (no force modification - pure potential gradient)
-          ax += fx / starA.mass
-          ay += fy / starA.mass
-        }
+        
+        // Plummer-softened gravity: F = G*m1*m2 * (dx,dy) / (r^2 + eps^2)^(3/2)
+        // This is the gradient of U = -G*m1*m2 / sqrt(r^2 + eps^2)
+        // Force is conservative and Hamiltonian-consistent
+        const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
+        const r = Math.sqrt(r2)
+        const invR = 1 / r
+        const invR3 = invR * invR * invR
+        
+        const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
+        const fx = dx * forceMagnitude
+        const fy = dy * forceMagnitude
+        
+        // Apply acceleration (no force modification - pure potential gradient)
+        ax += fx / starA.mass
+        ay += fy / starA.mass
       }
       
       accelerations.push({ ax, ay })
       
-      // Apply first kick + drift
-      starA.updateLeapfrog(dt, ax, ay, this.width, this.height, this.config)
+      // Apply first half-step: v(t+dt/2) and x(t+dt)
+      starA.updateVelocityVerletFirstHalf(dt, ax, ay, this.width, this.height, this.config)
     }
     
-    // Pass 2: Recompute accelerations at new positions and apply second kick
+    // Pass 2: Recompute accelerations at new positions and apply second half-step
     for (let i = 0; i < this.stars.length; i++) {
       const starA = this.stars[i]
       let ax = 0
       let ay = 0
       
-      if (this.config.physicsMode === PhysicsMode.ORBIT_PLAYGROUND) {
-        // ORBIT_PLAYGROUND: Full pairwise gravity with minimum-image convention
-        // All stars attract each other
-        for (let j = 0; j < this.stars.length; j++) {
-          if (i === j) continue
-          const starB = this.stars[j]
-          
-          // Use minimum-image convention ONLY if boundary wrapping is enabled
-          let dx = starB.x - starA.x
-          let dy = starB.y - starA.y
-          if (this.config.enableBoundaryWrapping) {
-            dx = minImageDelta(dx, this.width)
-            dy = minImageDelta(dy, this.height)
-          }
-          const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
-          const r = Math.sqrt(r2)
-          const invR = 1 / r
-          const invR3 = invR * invR * invR
-          // Pure Plummer-softened gravity: F = G*m1*m2 * (dx,dy) / (r^2 + eps^2)^(3/2)
-          // This is the gradient of U = -G*m1*m2 / sqrt(r^2 + eps^2)
-          // Force is conservative and Hamiltonian-consistent
-          const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
-          const fx = dx * forceMagnitude
-          const fy = dy * forceMagnitude
-          
-          // Apply acceleration (no force modification - pure potential gradient)
-          ax += fx / starA.mass
-          ay += fy / starA.mass
+      // Compute acceleration from all other stars at new positions
+      for (let j = 0; j < this.stars.length; j++) {
+        if (i === j) continue
+        const starB = this.stars[j]
+        
+        // Use minimum-image convention ONLY if boundary wrapping is enabled
+        let dx = starB.x - starA.x
+        let dy = starB.y - starA.y
+        if (this.config.enableBoundaryWrapping) {
+          dx = minImageDelta(dx, this.width)
+          dy = minImageDelta(dy, this.height)
         }
-      } else {
-        // N_BODY_CHAOS: Full pairwise gravity with minimum-image convention
-        for (let j = 0; j < this.stars.length; j++) {
-          if (i === j) continue
-          
-          const starB = this.stars[j]
-          
-          // Use minimum-image convention ONLY if boundary wrapping is enabled
-          let dx = starB.x - starA.x
-          let dy = starB.y - starA.y
-          if (this.config.enableBoundaryWrapping) {
-            dx = minImageDelta(dx, this.width)
-            dy = minImageDelta(dy, this.height)
-          }
-          
-          // Plummer softening: r² = dx² + dy² + eps²
-          const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
-          const invR = 1 / Math.sqrt(r2)
-          const invR3 = invR * invR * invR
-          
-          // Pure Plummer-softened gravity: F = G*m1*m2 * (dx,dy) / (r^2 + eps^2)^(3/2)
-          // This is the gradient of U = -G*m1*m2 / sqrt(r^2 + eps^2)
-          // Force is conservative and Hamiltonian-consistent
-          // NOTE: Force clamping removed - it breaks energy conservation by making force non-conservative
-          const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
-          const fx = dx * forceMagnitude
-          const fy = dy * forceMagnitude
-          
-          // Apply acceleration (no force modification - pure potential gradient)
-          ax += fx / starA.mass
-          ay += fy / starA.mass
-        }
+        
+        // Plummer-softened gravity (same as Pass 1)
+        const r2 = dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx
+        const r = Math.sqrt(r2)
+        const invR = 1 / r
+        const invR3 = invR * invR * invR
+        
+        const forceMagnitude = this.config.gravityConstant * starA.mass * starB.mass * invR3
+        const fx = dx * forceMagnitude
+        const fy = dy * forceMagnitude
+        
+        // Apply acceleration
+        ax += fx / starA.mass
+        ay += fy / starA.mass
       }
       
-      // Complete leapfrog with second kick
-      starA.completeLeapfrog(dt, ax, ay, this.config)
+      // Complete Velocity Verlet with second half-step: v(t+dt)
+      starA.updateVelocityVerletSecondHalf(dt, ax, ay, this.config)
     }
     
-    // Handle merging
+    // Handle merging (INELASTIC, NON-HAMILTONIAN - gameplay feature)
+    // Merging is intentionally inelastic and breaks energy conservation
+    // For physics validation, disable merging (enableMerging = false)
     if (this.config.enableMerging) {
       const toRemove: Set<number> = new Set()
       const toAdd: Star[] = []
       
       // Calculate energy before merge (for diagnostics)
+      // This separates merge-induced energy loss from integrator drift
       let energyPreMerge: number | null = null
       if (this.energyStats) {
         energyPreMerge = this.energyStats.total
+        // Store energy before merge for drift calculation
+        if (!this.energyStats.lastEnergyBeforeMerge) {
+          this.energyStats.lastEnergyBeforeMerge = energyPreMerge
+        }
       } else {
         // Calculate energy on-the-fly if stats not initialized
-        let kinetic = 0
-        let potential = 0
-        for (const star of this.stars) {
-          kinetic += 0.5 * star.mass * (star.vx * star.vx + star.vy * star.vy)
-        }
-        for (let i = 0; i < this.stars.length; i++) {
-          for (let j = i + 1; j < this.stars.length; j++) {
-            let dx = this.stars[j].x - this.stars[i].x
-            let dy = this.stars[j].y - this.stars[i].y
-            if (this.config.enableBoundaryWrapping) {
-              dx = minImageDelta(dx, this.width)
-              dy = minImageDelta(dy, this.height)
-            }
-            const r = Math.sqrt(dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx)
-            potential -= (this.config.gravityConstant * this.stars[i].mass * this.stars[j].mass) / r
-          }
-        }
-        energyPreMerge = kinetic + potential
+        energyPreMerge = this.computeTotalEnergy()
       }
       
       for (let i = 0; i < this.stars.length; i++) {
@@ -871,26 +828,10 @@ export class GravitySimulation {
       this.stars.push(...toAdd)
       
       // Record merge energy change (if any merges occurred)
+      // This is INELASTIC energy loss - expected and intentional
       if (toRemove.size > 0 && energyPreMerge !== null) {
         // Calculate energy after merge
-        let kinetic = 0
-        let potential = 0
-        for (const star of this.stars) {
-          kinetic += 0.5 * star.mass * (star.vx * star.vx + star.vy * star.vy)
-        }
-        for (let i = 0; i < this.stars.length; i++) {
-          for (let j = i + 1; j < this.stars.length; j++) {
-            let dx = this.stars[j].x - this.stars[i].x
-            let dy = this.stars[j].y - this.stars[i].y
-            if (this.config.enableBoundaryWrapping) {
-              dx = minImageDelta(dx, this.width)
-              dy = minImageDelta(dy, this.height)
-            }
-            const r = Math.sqrt(dx * dx + dy * dy + this.config.softeningEpsPx * this.config.softeningEpsPx)
-            potential -= (this.config.gravityConstant * this.stars[i].mass * this.stars[j].mass) / r
-          }
-        }
-        const energyPostMerge = kinetic + potential
+        const energyPostMerge = this.computeTotalEnergy()
         const deltaEnergy = energyPostMerge - energyPreMerge
         
         // Record merge event
@@ -901,7 +842,9 @@ export class GravitySimulation {
             total: 0,
             history: [],
             trend: 'stable',
-            mergeEvents: []
+            mergeEvents: [],
+            integratorDrift: 0,
+            lastEnergyBeforeMerge: null
           }
         }
         if (!this.energyStats.mergeEvents) {
@@ -917,18 +860,25 @@ export class GravitySimulation {
         if (this.energyStats.mergeEvents.length > 50) {
           this.energyStats.mergeEvents.shift()
         }
+        
+        // Update integrator drift: energy change from last merge to this merge
+        // This excludes merge-induced energy loss
+        if (this.energyStats.lastEnergyBeforeMerge !== null) {
+          const driftSinceLastMerge = energyPreMerge - this.energyStats.lastEnergyBeforeMerge
+          this.energyStats.integratorDrift += driftSinceLastMerge
+        }
+        this.energyStats.lastEnergyBeforeMerge = energyPostMerge
       }
     }
   }
   
   /**
-   * Compute total energy (kinetic + potential) for energy conservation validation
+   * Compute total energy (kinetic + potential)
    * Uses the SAME minimum-image convention as force calculations
    */
-  private updateEnergyStats(): void {
+  private computeTotalEnergy(): number {
     if (this.stars.length === 0) {
-      this.energyStats = null
-      return
+      return 0
     }
     
     // Kinetic energy: K = Σ 0.5 * m * v²
@@ -960,7 +910,36 @@ export class GravitySimulation {
       }
     }
     
-    const total = kinetic + potential
+    return kinetic + potential
+  }
+  
+  /**
+   * Update energy statistics for diagnostics
+   * Separates integrator drift (numerical error) from merge-induced energy loss (intentional)
+   * 
+   * For physics validation:
+   * - Disable merging (enableMerging = false)
+   * - Disable boundary wrapping (enableBoundaryWrapping = false)
+   * - Use fixed timestep (already implemented)
+   * - Energy should remain approximately constant (small integrator drift only)
+   */
+  private updateEnergyStats(): void {
+    if (this.stars.length === 0) {
+      this.energyStats = null
+      return
+    }
+    
+    // Compute total energy
+    const total = this.computeTotalEnergy()
+    
+    // Separate kinetic and potential for display
+    let kinetic = 0
+    for (const star of this.stars) {
+      const v2 = star.vx * star.vx + star.vy * star.vy
+      kinetic += 0.5 * star.mass * v2
+    }
+    
+    let potential = total - kinetic
     
     // Initialize or update energy stats
     if (!this.energyStats) {
@@ -970,9 +949,22 @@ export class GravitySimulation {
         total,
         history: [total],
         trend: 'stable',
-        mergeEvents: []
+        mergeEvents: [],
+        integratorDrift: 0,
+        lastEnergyBeforeMerge: null
       }
     } else {
+      // Update integrator drift (excluding merge events)
+      // Only track drift if no merge occurred this step
+      if (this.energyStats.lastEnergyBeforeMerge !== null) {
+        const drift = total - this.energyStats.lastEnergyBeforeMerge
+        this.energyStats.integratorDrift += drift
+      } else if (this.energyStats.history.length > 0) {
+        // Track drift from last energy measurement
+        const lastEnergy = this.energyStats.history[this.energyStats.history.length - 1]
+        const drift = total - lastEnergy
+        this.energyStats.integratorDrift += drift
+      }
       this.energyStats.kinetic = kinetic
       this.energyStats.potential = potential
       this.energyStats.total = total

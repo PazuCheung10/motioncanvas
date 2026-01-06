@@ -89,8 +89,12 @@ export class GravityRenderer {
   private drawStar(star: Star): void {
     // Glow radius scales with mass (purely visual, doesn't affect physics)
     // Base glow + mass-dependent scaling (linear)
+    // Cancel radiusScale factor (divide by radiusScale, but skip if radiusScale = 1.0)
     const baseGlow = star.radius * 1.5 // Start from physical radius
-    const massGlow = star.mass * this.config.glowRadiusMultiplier // Linear scaling with mass
+    const glowMultiplier = this.config.radiusScale !== 1.0 
+      ? this.config.glowRadiusMultiplier / this.config.radiusScale 
+      : this.config.glowRadiusMultiplier
+    const massGlow = star.mass * glowMultiplier // Linear scaling with mass
     const glowRadius = baseGlow + massGlow
     
     // Opacity scales with mass: opacity = mass * opacityMultiplier (clamped 0-1)
@@ -176,8 +180,12 @@ export class GravityRenderer {
     
     // Glow radius scales with mass (purely visual)
     // Base glow + mass-dependent scaling (linear)
+    // Cancel radiusScale factor (divide by radiusScale, but skip if radiusScale = 1.0)
     const baseGlow = radius * 1.5 // Start from physical radius
-    const massGlow = mass * this.config.glowRadiusMultiplier // Linear scaling with mass
+    const glowMultiplier = this.config.radiusScale !== 1.0 
+      ? this.config.glowRadiusMultiplier / this.config.radiusScale 
+      : this.config.glowRadiusMultiplier
+    const massGlow = mass * glowMultiplier // Linear scaling with mass
     const glowRadius = baseGlow + massGlow
     
     // Opacity scales with mass (same as regular stars): opacity = mass * opacityMultiplier
