@@ -91,13 +91,45 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
           if (ctx) {
             ctx.fillStyle = '#0a0a0a'
             ctx.fillRect(0, 0, canvas.width, canvas.height)
-            // Simple star rendering for preview
+            // Enhanced star rendering for preview - make stars more visible
             sim.stars.forEach(star => {
-              ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(star.mass / 50, 1)})`
+              // Ensure minimum visible size
+              const minRadius = 1
+              const displayRadius = Math.max(minRadius, star.radius)
+              
+              // Use brighter opacity based on mass, but ensure minimum visibility
+              const opacity = Math.max(0.6, Math.min(star.mass / 30, 1))
+              
+              // Add a simple glow effect for better visibility
+              const glowRadius = displayRadius * 2
+              const glowGradient = ctx.createRadialGradient(
+                star.x, star.y, 0,
+                star.x, star.y, glowRadius
+              )
+              glowGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`)
+              glowGradient.addColorStop(0.5, `rgba(255, 255, 255, ${opacity * 0.3})`)
+              glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+              
+              ctx.fillStyle = glowGradient
               ctx.beginPath()
-              ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2)
+              ctx.arc(star.x, star.y, glowRadius, 0, Math.PI * 2)
+              ctx.fill()
+              
+              // Draw the star core
+              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+              ctx.beginPath()
+              ctx.arc(star.x, star.y, displayRadius, 0, Math.PI * 2)
               ctx.fill()
             })
+            
+            // Render central sun if it exists
+            if (sim.centralSun) {
+              const sunRadius = Math.max(2, sim.centralSun.radius)
+              ctx.fillStyle = '#ffff00'
+              ctx.beginPath()
+              ctx.arc(sim.centralSun.x, sim.centralSun.y, sunRadius, 0, Math.PI * 2)
+              ctx.fill()
+            }
           }
         }
       })
