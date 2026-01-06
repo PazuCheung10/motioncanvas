@@ -141,6 +141,9 @@ export class GenomeDecoder {
     enableOrbitTrails: false,
     orbitTrailFadeTime: 1.0,
     enableBoundaryWrapping: true,
+    
+    // Potential energy degree (fixed to 2 for standard gravity)
+    potentialEnergyDegree: 2,
       
       // DEPRECATED (for compatibility)
       maxStarSize: 12,
