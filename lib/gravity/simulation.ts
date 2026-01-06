@@ -623,15 +623,16 @@ export class GravitySimulation {
         const r = Math.sqrt(r2)
         const invR = 1 / r
         
-        // Compute 1/r^n where n = potentialEnergyDegree
+        // Compute 1/r^(degree+1) for acceleration vector
         // For degree n: potential U = -G*m1*m2 / r^(n-1), force = G*m1*m2*(n-1) / r^n
-        let invRN = 1
-        for (let i = 0; i < this.config.potentialEnergyDegree; i++) {
-          invRN *= invR
+        // Acceleration vector: a = G*mB*(n-1)/r^n * (dx,dy)/r = G*mB*(n-1)*(dx,dy)/r^(n+1)
+        let invRNPlus1 = 1
+        for (let i = 0; i < this.config.potentialEnergyDegree + 1; i++) {
+          invRNPlus1 *= invR
         }
         
-        // Direct acceleration: a = G * mB * (degree-1) / r^degree in direction of r
-        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRN
+        // Direct acceleration: a = G * mB * (degree-1) * (dx,dy) / r^(degree+1)
+        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRNPlus1
         ax += dx * s
         ay += dy * s
       }
@@ -661,15 +662,16 @@ export class GravitySimulation {
         const r = Math.sqrt(r2)
         const invR = 1 / r
         
-        // Compute 1/r^n where n = potentialEnergyDegree
+        // Compute 1/r^(degree+1) for acceleration vector
         // For degree n: potential U = -G*m1*m2 / r^(n-1), force = G*m1*m2*(n-1) / r^n
-        let invRN = 1
-        for (let i = 0; i < this.config.potentialEnergyDegree; i++) {
-          invRN *= invR
+        // Acceleration vector: a = G*mB*(n-1)/r^n * (dx,dy)/r = G*mB*(n-1)*(dx,dy)/r^(n+1)
+        let invRNPlus1 = 1
+        for (let i = 0; i < this.config.potentialEnergyDegree + 1; i++) {
+          invRNPlus1 *= invR
         }
         
-        // Direct acceleration: a = G * mB * (degree-1) / r^degree in direction of r
-        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRN
+        // Direct acceleration: a = G * mB * (degree-1) * (dx,dy) / r^(degree+1)
+        const s = this.config.gravityConstant * starB.mass * (this.config.potentialEnergyDegree - 1) * invRNPlus1
         ax += dx * s
         ay += dy * s
       }
