@@ -10,11 +10,12 @@ const initialUniverse = initialUniverseData as { width: number; height: number; 
 import styles from './UniverseBrowser.module.css'
 
 interface UniverseBrowserProps {
-  onLoadUniverse: (config: GravityConfig) => void
+  onLoadUniverse: (config: GravityConfig, universeKey?: string) => void
+  onResetUniverse?: () => void
   currentConfig: GravityConfig
 }
 
-export default function UniverseBrowser({ onLoadUniverse, currentConfig }: UniverseBrowserProps) {
+export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, currentConfig }: UniverseBrowserProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
   const previewRefs = useRef<Array<HTMLCanvasElement | null>>([])
@@ -107,12 +108,12 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
     return () => cancelAnimationFrame(frameId)
   }, [isOpen])
   
-  // Reset a specific universe
-  const handleResetUniverse = (index: number, e: React.MouseEvent) => {
+  // Reset a specific universe preview (in the browser panel)
+  const handleResetPreview = (index: number, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click
     const sim = simulationRefs.current[index]
     if (sim) {
-      // Reload initial universe
+      // Reload initial universe for this preview
       sim.loadUniverse({
         width: 160,
         height: 120,
@@ -124,6 +125,17 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
       })
     }
   }
+  
+  // Reset the main simulation (when reset button is clicked on the currently active universe)
+  const handleResetMain = (presetIndex: number, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    // Only reset main simulation if this is the currently selected universe
+    if (selectedPreset === presetIndex && onResetUniverse) {
+      onResetUniverse()
+    }
+    // Always reset the preview
+    handleResetPreview(presetIndex, e)
+  }
 
   const handleLoadPreset = (presetIndex: number) => {
     const preset = UNIVERSE_PRESETS[presetIndex]
@@ -131,7 +143,8 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
       ...currentConfig,
       ...preset.config
     }
-    onLoadUniverse(config)
+    // Pass preset index as universe key to identify which universe this is
+    onLoadUniverse(config, `preset-${presetIndex}`)
     setSelectedPreset(presetIndex)
   }
 
@@ -141,7 +154,8 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
       ...currentConfig,
       ...randomConfig
     }
-    onLoadUniverse(config)
+    // Use timestamp as key for random universes (each random is unique)
+    onLoadUniverse(config, `random-${Date.now()}`)
     setSelectedPreset(null)
   }
 
@@ -186,7 +200,7 @@ export default function UniverseBrowser({ onLoadUniverse, currentConfig }: Unive
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h4>{preset.name}</h4>
                     <button
-                      onClick={(e) => handleResetUniverse(index, e)}
+                      onClick={(e) => handleResetMain(index, e)}
                       className={styles.resetButton}
                       style={{
                         padding: '4px 8px',

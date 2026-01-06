@@ -133,7 +133,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Controls</h3>
+            <h3>
+              Controls
+              <span className={styles.helpBadge} title="Clear All Stars: Removes all stars from the simulation. Reset to Defaults: Restores all settings to default values.">
+                ?
+              </span>
+            </h3>
             {onClearStars && (
               <button
                 onClick={onClearStars}
@@ -158,7 +163,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Physics Mode</h3>
+            <h3>
+              Physics Mode
+              <span className={styles.helpBadge} title="ORBIT_PLAYGROUND: Full pairwise gravity with energy-conserving integrator. Stable orbits, no damping/clamping. N_BODY_CHAOS: Same physics but with optional damping and speed clamping for gameplay.">
+                ?
+              </span>
+            </h3>
             <label>
               Mode:
               <select
@@ -171,17 +181,6 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
             </label>
             {localConfig.physicsMode === 'ORBIT_PLAYGROUND' && (
               <>
-                <label>
-                  Sun Mass: {localConfig.sunMass.toFixed(1)}
-                  <input
-                    type="range"
-                    min="50"
-                    max="500"
-                    step="10"
-                    value={localConfig.sunMass}
-                    onChange={(e) => updateConfig('sunMass', parseFloat(e.target.value))}
-                  />
-                </label>
                 <div className={styles.info} style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', marginTop: '4px' }}>
                   Satellites attract each other: <strong>Disabled</strong> (enforced in ORBIT_PLAYGROUND)
                 </div>
@@ -204,7 +203,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Core Physics</h3>
+            <h3>
+              Core Physics
+              <span className={styles.helpBadge} title="Launch Strength: Multiplier for final launch velocity. Mass Resistance: Reduces launch speed for larger stars (0 = no resistance, 1 = full resistance). Gravity Constant: G in F = G*m1*m2/r². Velocity Damping: Energy loss per frame (0 = energy-conserving, >0 = gradual slowdown).">
+                ?
+              </span>
+            </h3>
             <label>
               Launch Strength: {localConfig.launchStrength.toFixed(2)}
               <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
@@ -258,7 +262,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Gravity Softening</h3>
+            <h3>
+              Gravity Softening
+              <span className={styles.helpBadge} title="Plummer Softening: Prevents infinite forces at r=0 by using r² = dx² + dy² + eps². Larger eps = smoother forces but less accurate. Max Force: Clamps acceleration to prevent numerical explosions (0 = disabled, breaks energy conservation).">
+                ?
+              </span>
+            </h3>
             <label>
               Softening Epsilon: {localConfig.softeningEpsPx.toFixed(1)} px
               <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
@@ -290,7 +299,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Launch Velocity (Flick)</h3>
+            <h3>
+              Launch Velocity (Flick)
+              <span className={styles.helpBadge} title="Flick Window: Time window to measure cursor speed before release. Flick S0: Speed compressor scale - lower = more compression. Flick Vmax: Maximum compressed speed - allows natural hand movements to produce reasonable velocities.">
+                ?
+              </span>
+            </h3>
             <label>
               Flick Window: {localConfig.flickWindowMs} ms
               <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
@@ -336,7 +350,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Mass Growth</h3>
+            <h3>
+              Mass Growth
+              <span className={styles.helpBadge} title="Hold to Max: Time to hold mouse/touch to reach maximum mass. Min/Max Mass: Mass range for created stars. Radius Scale: Multiplier for radius calculation. Radius Power: Exponent in radius = mass^power × scale (0.5 = 2D area scaling, 0.333 = 3D volume scaling).">
+                ?
+              </span>
+            </h3>
             <label>
               Hold to Max: {localConfig.holdToMaxSeconds.toFixed(1)}s
               <input
@@ -401,7 +420,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Angular Guidance (Launch Assist Only)</h3>
+            <h3>
+              Angular Guidance (Launch Assist Only)
+              <span className={styles.helpBadge} title="Guidance Strength: Rotates launch velocity toward tangential direction (0 = no guidance, 1 = pure tangential). Preserves energy and angular momentum. Radial Clamp: Reduces excessive radial velocity at launch. Search Radius: Distance to search for nearest massive star to compute orbital center.">
+                ?
+              </span>
+            </h3>
             <label>
               Guidance Strength: {localConfig.angularGuidanceStrength.toFixed(2)}
               <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
@@ -444,7 +468,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Visual</h3>
+            <h3>
+              Visual
+              <span className={styles.helpBadge} title="Glow Radius Multiplier: Controls star glow size (glow = baseGlow + mass × multiplier). Opacity Multiplier: Controls star opacity (opacity = mass × multiplier, clamped 0-1).">
+                ?
+              </span>
+            </h3>
             <label>
               Glow Radius Multiplier: {localConfig.glowRadiusMultiplier.toFixed(3)}
               <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
@@ -476,7 +505,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
           </div>
 
           <div className={styles.section}>
-            <h3>Merging</h3>
+            <h3>
+              Merging
+              <span className={styles.helpBadge} title="Inelastic collision: When stars touch, they merge into one. Momentum is conserved, but energy is lost (non-Hamiltonian). For physics validation, disable merging.">
+                ?
+              </span>
+            </h3>
             <label>
               <input
                 type="checkbox"

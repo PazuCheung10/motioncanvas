@@ -44,6 +44,7 @@ export default function MotionCanvasPage() {
   }
   
   const [config, setConfig] = useState<GravityConfig>(loadConfigFromStorage())
+  const [currentUniverseKey, setCurrentUniverseKey] = useState<string | null>(null)
   const [starCount, setStarCount] = useState(0)
   const [debugStats, setDebugStats] = useState<{
     holdDragSpeed: number
@@ -95,26 +96,20 @@ export default function MotionCanvasPage() {
     }
   }, []) // Only initialize once
 
-  // Track previous physics mode to detect mode changes
-  const prevPhysicsModeRef = useRef(config.physicsMode)
-  
-  // Update config when it changes
+  // Update config when it changes (but don't reload universe automatically)
+  // Universe reloading is handled explicitly by handleLoadUniverse
   useEffect(() => {
     if (systemRef.current) {
       systemRef.current.updateConfig(config)
-      
-      // Only reload universe if physics mode changed (not for every config change)
-      if (prevPhysicsModeRef.current !== config.physicsMode) {
-        systemRef.current.loadUniverse(initialUniverse)
-        prevPhysicsModeRef.current = config.physicsMode
-      }
     }
   }, [config])
   
-  // Load initial universe
+  // Load initial universe on mount
   useEffect(() => {
     if (systemRef.current) {
       systemRef.current.loadUniverse(initialUniverse)
+      // Set initial universe key to prevent restart on first config update
+      setCurrentUniverseKey('initial')
     }
   }, [])
 
@@ -122,8 +117,29 @@ export default function MotionCanvasPage() {
     setConfig(newConfig)
   }
 
-  const handleLoadUniverse = (newConfig: GravityConfig) => {
+  const handleLoadUniverse = (newConfig: GravityConfig, universeKey?: string) => {
+    // Generate a unique key for this universe config
+    const key = universeKey || JSON.stringify(newConfig)
+    
+    // Only reload universe if it's a different universe (first time loading it)
+    // Clicking the same universe multiple times should NOT restart it
+    if (key !== currentUniverseKey) {
+      if (systemRef.current) {
+        systemRef.current.loadUniverse(initialUniverse)
+      }
+      setCurrentUniverseKey(key)
+    }
+    
+    // Always update config (switches universe settings without restarting)
+    // This allows switching between universes without restarting
     setConfig(newConfig)
+  }
+  
+  // Handler for reset button - explicitly restarts the current universe
+  const handleResetUniverse = () => {
+    if (systemRef.current) {
+      systemRef.current.loadUniverse(initialUniverse)
+    }
   }
 
   return (
@@ -134,6 +150,7 @@ export default function MotionCanvasPage() {
       </div>
       <UniverseBrowser
         onLoadUniverse={handleLoadUniverse}
+        onResetUniverse={handleResetUniverse}
         currentConfig={config}
       />
       <GravityDebugPanel
