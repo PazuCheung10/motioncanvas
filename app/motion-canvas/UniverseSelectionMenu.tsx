@@ -170,7 +170,8 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         if (!ctx) return
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         
-        sim.update(0.016) // ~60fps - physics update (DO NOT MODIFY)
+        // Slow down thumbnails for better visibility (0.5x speed)
+        sim.update(0.008) // Half speed for preview thumbnails
         
         // Clear and draw background
         ctx.fillStyle = '#000'
