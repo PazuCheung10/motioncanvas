@@ -43,6 +43,7 @@
   max-width: 900px;
   max-height: 35vh;
   overflow-y: auto;
+  overflow-x: visible;
   color: rgba(255, 255, 255, 0.8);
   will-change: contents;
   transform: translateZ(0);
@@ -244,7 +245,7 @@
   font-size: 10px;
   line-height: 1.4;
   max-width: 300px;
-  z-index: 10000;
+  z-index: 10001;
   pointer-events: none;
   transform: translateX(-50%) translateY(-100%);
   margin-top: -8px;

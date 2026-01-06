@@ -36,20 +36,34 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
 
   const handleHelpMouseEnter = (e: React.MouseEvent<HTMLSpanElement>, text: string) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const panelRect = e.currentTarget.closest(`.${styles.panel}`)?.getBoundingClientRect()
-    if (panelRect) {
-      // Position relative to panel
+    const panel = e.currentTarget.closest(`.${styles.panel}`) as HTMLElement
+    if (panel) {
+      const panelRect = panel.getBoundingClientRect()
+      // Position relative to panel, accounting for scroll
+      const badgeCenterX = rect.left - panelRect.left + rect.width / 2 + panel.scrollLeft
+      const badgeTop = rect.top - panelRect.top + panel.scrollTop
+      
+      // Adjust Y position to keep tooltip within panel bounds
+      // Tooltip appears above, so check if there's enough space
+      const tooltipHeight = 60 // Approximate tooltip height
+      let tooltipY = badgeTop - 8 // Default: above badge
+      
+      // If tooltip would go above panel, show it below instead
+      if (tooltipY - tooltipHeight < panel.scrollTop) {
+        tooltipY = badgeTop + rect.height + 8
+      }
+      
       setTooltip({
         text,
-        x: rect.left - panelRect.left + rect.width / 2,
-        y: rect.top - panelRect.top - 10
+        x: badgeCenterX,
+        y: tooltipY
       })
     } else {
-      // Fallback to absolute positioning
+      // Fallback
       setTooltip({
         text,
         x: rect.left + rect.width / 2,
-        y: rect.top - 10
+        y: rect.top
       })
     }
   }
