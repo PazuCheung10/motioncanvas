@@ -88,32 +88,43 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
             ctx.fillStyle = '#000000' // Darker background for better contrast
             ctx.fillRect(0, 0, canvasWidth, canvasHeight)
             
-            // Preview-only rendering with exaggerated visibility
-            sim.stars.forEach(star => {
-              // Force minimum visible radius for thumbnails (preview-only, doesn't affect physics)
-              const displayRadius = Math.max(2, star.radius * 1.5)
+            // Debug: Force a red pixel to verify canvas is drawing
+            ctx.fillStyle = '#ff0000'
+            ctx.fillRect(0, 0, 4, 4)
+            
+            // Bulletproof preview star rendering - guard against NaN/undefined
+            sim.stars.forEach((star) => {
+              // Guard positions against NaN/undefined
+              const x = Number.isFinite(star.x) ? star.x : 0
+              const y = Number.isFinite(star.y) ? star.y : 0
+              
+              // Guard radius against NaN/undefined
+              const baseRadius = Number.isFinite(star.radius) ? star.radius : 1
+              const r = Math.max(2, baseRadius * 1.5)
               
               // Fixed high alpha for visibility (not based on mass)
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
-              
-              // Optional: subtle glow for better visibility
               ctx.shadowBlur = 2
-              ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
+              ctx.shadowColor = 'rgba(255, 255, 255, 0.6)'
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
               
               ctx.beginPath()
-              ctx.arc(star.x, star.y, displayRadius, 0, Math.PI * 2)
+              ctx.arc(x, y, r, 0, Math.PI * 2)
               ctx.fill()
-              
-              // Reset shadow
-              ctx.shadowBlur = 0
             })
             
-            // Render central sun if it exists (with exaggerated size for preview)
+            // Reset shadow after stars
+            ctx.shadowBlur = 0
+            
+            // Render central sun if it exists (with guards)
             if (sim.centralSun) {
-              const sunRadius = Math.max(3, sim.centralSun.radius * 1.5)
+              const sunX = Number.isFinite(sim.centralSun.x) ? sim.centralSun.x : canvasWidth / 2
+              const sunY = Number.isFinite(sim.centralSun.y) ? sim.centralSun.y : canvasHeight / 2
+              const baseSunRadius = Number.isFinite(sim.centralSun.radius) ? sim.centralSun.radius : 2
+              const sunRadius = Math.max(3, baseSunRadius * 1.5)
+              
               ctx.fillStyle = '#ffff00'
               ctx.beginPath()
-              ctx.arc(sim.centralSun.x, sim.centralSun.y, sunRadius, 0, Math.PI * 2)
+              ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2)
               ctx.fill()
             }
           }
