@@ -61,10 +61,10 @@ npm start
 ## Project Structure
 
 ```
-MotionCanvas/
+OrbitLab/
 ├── app/
-│   ├── motion-canvas/           # Main gravity simulation interface
-│   │   ├── page.tsx
+│   ├── orbit-lab/               # Main gravity simulation interface (components)
+│   │   ├── OrbitLabPage.tsx
 │   │   ├── GravityDebugPanel.tsx
 │   │   ├── UniverseBrowser.tsx
 │   │   └── UniverseSelectionMenu.tsx

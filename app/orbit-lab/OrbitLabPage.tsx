@@ -9,9 +9,9 @@ import UniverseBrowser from './UniverseBrowser'
 import UniverseSelectionMenu from './UniverseSelectionMenu'
 import { generateProceduralUniverse } from '@/lib/gravity/universe-presets'
 import { generateGaussianStars } from '@/lib/gravity/starfield'
-import styles from './page.module.css'
+import styles from './OrbitLabPage.module.css'
 
-export default function MotionCanvasPage() {
+export default function OrbitLabPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const systemRef = useRef<GravitySystem | null>(null)
   const titleRef = useRef<HTMLDivElement>(null)

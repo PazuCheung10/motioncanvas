@@ -1,6 +1,6 @@
-import MotionCanvasPage from './motion-canvas/page'
+import OrbitLabPage from './orbit-lab/OrbitLabPage'
 
 export default function Home() {
-  return <MotionCanvasPage />
+  return <OrbitLabPage />
 }
 
