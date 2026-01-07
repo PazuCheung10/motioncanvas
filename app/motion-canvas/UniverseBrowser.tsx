@@ -309,12 +309,19 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                   </div>
                   <p>{preset.description}</p>
                   <div className={styles.badges}>
-                    <span className={styles.badge}>
-                      {preset.config.physicsMode === PhysicsMode.ORBIT_PLAYGROUND ? 'Orbit' : 'N-Body'}
-                    </span>
-                    {preset.config.satellitesAttractEachOther && (
-                      <span className={styles.badge}>Sat-Sat</span>
-                    )}
+                    {(() => {
+                      const presetConfig = getPresetConfig(preset)
+                      return (
+                        <>
+                          <span className={styles.badge}>
+                            {(presetConfig.physicsMode ?? currentConfig.physicsMode) === PhysicsMode.ORBIT_PLAYGROUND ? 'Orbit' : 'N-Body'}
+                          </span>
+                          {(presetConfig.satellitesAttractEachOther ?? currentConfig.satellitesAttractEachOther) && (
+                            <span className={styles.badge}>Sat-Sat</span>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               </div>
