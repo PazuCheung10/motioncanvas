@@ -82,7 +82,8 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               enableMerging: true,
               enableBoundaryWrapping: true,
               enableOrbitTrails: false,
-              gravityConstant: baseGravityConstant * 0.8,
+              // Decrease thumbnail gravity by 30% (0.8 -> 0.56).
+              gravityConstant: baseGravityConstant * 0.56,
               potentialEnergyDegree: 1.7,
               minMass: previewMinMass,
               maxMass: previewMaxMass,
@@ -216,7 +217,8 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
         enableMerging: true,
         enableBoundaryWrapping: true,
         enableOrbitTrails: false,
-        gravityConstant: baseGravityConstant * 0.8,
+        // Decrease thumbnail gravity by 30% (0.8 -> 0.56).
+        gravityConstant: baseGravityConstant * 0.56,
         potentialEnergyDegree: 1.7,
         minMass: previewMinMass,
         maxMass: previewMaxMass,
