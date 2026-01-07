@@ -65,13 +65,26 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
           }
 
           if (!sim || sim.width !== cssW || sim.height !== cssH) {
+            const presetConfig = getPresetConfig(preset)
+            const baseGravityConstant = (presetConfig.gravityConstant ?? currentConfig.gravityConstant)
+            const baseMinMass = (presetConfig.minMass ?? currentConfig.minMass)
+            const baseMaxMass = (presetConfig.maxMass ?? currentConfig.maxMass)
+            const previewMinMass = Math.max(0.001, baseMinMass * 0.85)
+            const previewMaxMass = Math.max(previewMinMass + 0.001, (baseMaxMass * (2 / 3)) * 0.85)
+            const baseRadiusScale = (presetConfig.radiusScale ?? currentConfig.radiusScale)
+            const previewRadiusScale = baseRadiusScale * 0.55
+
             const config: GravityConfig = {
               ...currentConfig,
-              ...getPresetConfig(preset),
+              ...presetConfig,
               // keep previews lively + visible
-              enableMerging: false,
+              enableMerging: true,
               enableBoundaryWrapping: true,
               enableOrbitTrails: false,
+              gravityConstant: baseGravityConstant * 0.2,
+              minMass: previewMinMass,
+              maxMass: previewMaxMass,
+              radiusScale: previewRadiusScale,
             }
 
             sim = new GravitySimulation(cssW, cssH, config)
@@ -84,12 +97,52 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 height: cssH,
                 config,
                 seed: seedKey,
-                starCount: 55,
+                starCount: Math.round(55 * 1.3),
               })
             )
+
+            // Scale initial velocities down for tiny preview "universes"
+            const minDim = Math.min(sim.width, sim.height)
+            const speedScale = Math.max(0.1, Math.min(1.0, minDim / 600))
+            if (speedScale !== 1.0) {
+              sim.stars.forEach((star) => {
+                star.vx *= speedScale
+                star.vy *= speedScale
+                star.vxHalf *= speedScale
+                star.vyHalf *= speedScale
+              })
+            }
           }
 
           sim.update(1 / 60)
+
+          // If everything merged into 1 star, reset with a fresh mini-universe
+          if (sim.stars.length <= 1) {
+            const seedKey = `browser-preview-${index}-${preset.name}-respawn-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+            previewSeedRef.current[index] = seedKey
+
+            sim.loadUniverse(
+              generateProceduralUniverse({
+                width: sim.width,
+                height: sim.height,
+                config: sim.config,
+                seed: seedKey,
+                starCount: 30,
+              })
+            )
+
+            // Scale initial velocities down for tiny preview "universes"
+            const minDim = Math.min(sim.width, sim.height)
+            const speedScale = Math.max(0.1, Math.min(1.0, minDim / 600))
+            if (speedScale !== 1.0) {
+              sim.stars.forEach((star) => {
+                star.vx *= speedScale
+                star.vy *= speedScale
+                star.vxHalf *= speedScale
+                star.vyHalf *= speedScale
+              })
+            }
+          }
           
           const ctx = canvas.getContext('2d')
           if (ctx) {
@@ -100,8 +153,10 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
             
             ctx.fillStyle = '#ffffff'
             for (const star of sim.stars) {
+              const baseRadius = Number.isFinite(star.radius) ? star.radius : 1
+              const r = Math.max(1.0, Math.min(6, 0.7 + Math.pow(baseRadius, 0.75) * 0.85))
               ctx.beginPath()
-              ctx.arc(star.x, star.y, Math.max(1, star.radius), 0, Math.PI * 2)
+              ctx.arc(star.x, star.y, r, 0, Math.PI * 2)
               ctx.fill()
             }
             
@@ -129,22 +184,35 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
     if (sim) {
       // Reseed procedural preview
       const preset = UNIVERSE_PRESETS[index]
+      const presetConfig = getPresetConfig(preset)
+      const baseGravityConstant = (presetConfig.gravityConstant ?? currentConfig.gravityConstant)
+      const baseMinMass = (presetConfig.minMass ?? currentConfig.minMass)
+      const baseMaxMass = (presetConfig.maxMass ?? currentConfig.maxMass)
+      const previewMinMass = Math.max(0.001, baseMinMass * 0.85)
+      const previewMaxMass = Math.max(previewMinMass + 0.001, (baseMaxMass * (2 / 3)) * 0.85)
+      const baseRadiusScale = (presetConfig.radiusScale ?? currentConfig.radiusScale)
+      const previewRadiusScale = baseRadiusScale * 0.55
+
       const config: GravityConfig = {
         ...currentConfig,
-        ...getPresetConfig(preset),
-        enableMerging: false,
+        ...presetConfig,
+        enableMerging: true,
         enableBoundaryWrapping: true,
         enableOrbitTrails: false,
+        gravityConstant: baseGravityConstant * 0.2,
+        minMass: previewMinMass,
+        maxMass: previewMaxMass,
+        radiusScale: previewRadiusScale,
       }
       sim.updateConfig(config)
-      previewSeedRef.current[index] = `browser-preview-${index}-${preset.name}-${Date.now()}`
+      previewSeedRef.current[index] = `browser-preview-${index}-${preset.name}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
       sim.loadUniverse(
         generateProceduralUniverse({
           width: sim.width,
           height: sim.height,
           config,
           seed: previewSeedRef.current[index],
-          starCount: 55,
+          starCount: Math.round(55 * 1.3),
         })
       )
     }
