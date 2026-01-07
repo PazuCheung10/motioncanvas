@@ -82,7 +82,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               enableMerging: true,
               enableBoundaryWrapping: true,
               enableOrbitTrails: false,
-              gravityConstant: baseGravityConstant * 0.5,
+              gravityConstant: baseGravityConstant * 0.8,
               potentialEnergyDegree: 1.7,
               minMass: previewMinMass,
               maxMass: previewMaxMass,
@@ -100,7 +100,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 height: cssH,
                 config,
                 seed: seedKey,
-                starCount: Math.round(55 * 1.3),
+                starCount: Math.round(55 * 1.3 * 0.7),
               })
             )
 
@@ -130,7 +130,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 height: sim.height,
                 config: sim.config,
                 seed: seedKey,
-                starCount: 30,
+                starCount: Math.round(30 * 0.7),
               })
             )
 
@@ -155,8 +155,14 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
             ctx.fillRect(0, 0, cssW, cssH)
             
             ctx.fillStyle = '#ffffff'
+            const maxMass = sim.stars.reduce((m, s) => Math.max(m, s.mass), 0)
+            const radiusPower = sim.config.radiusPower
+            const radiusScale = sim.config.radiusScale
             for (const star of sim.stars) {
-              const baseRadius = Number.isFinite(star.radius) ? star.radius : 1
+              const massForVisual = star.mass >= maxMass ? star.mass * 0.2 : star.mass
+              const baseRadius = Number.isFinite(massForVisual)
+                ? (Math.pow(massForVisual, radiusPower) * radiusScale) / 2
+                : 1
               const r = Math.max(1.0, Math.min(6, 0.7 + Math.pow(baseRadius, 0.75) * 0.85))
               ctx.beginPath()
               ctx.arc(star.x, star.y, r, 0, Math.PI * 2)
@@ -203,7 +209,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
         enableMerging: true,
         enableBoundaryWrapping: true,
         enableOrbitTrails: false,
-        gravityConstant: baseGravityConstant * 0.5,
+        gravityConstant: baseGravityConstant * 0.8,
         potentialEnergyDegree: 1.7,
         minMass: previewMinMass,
         maxMass: previewMaxMass,
@@ -218,7 +224,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
           height: sim.height,
           config,
           seed: previewSeedRef.current[index],
-          starCount: Math.round(55 * 1.3),
+          starCount: Math.round(55 * 1.3 * 0.7),
         })
       )
     }

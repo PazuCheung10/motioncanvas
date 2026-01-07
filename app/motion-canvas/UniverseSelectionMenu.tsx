@@ -47,7 +47,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       // Keep stars visible in tiny previews
       enableBoundaryWrapping: true,
 
-      gravityConstant: baseGravityConstant * 0.5,
+      gravityConstant: baseGravityConstant * 0.8,
       potentialEnergyDegree: 1.7,
       minMass: previewMinMass,
       maxMass: previewMaxMass,
@@ -63,7 +63,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       config: sim.config,
       seed: seedKey,
       // thumbnails look better denser
-      starCount: starCount ?? Math.round(60 * 1.3),
+      starCount: starCount ?? Math.round(60 * 1.3 * 0.7),
     })
     sim.loadUniverse(universe)
 
@@ -152,7 +152,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
           const nonce = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
           const seedKey = `selection-preview-${index}-respawn-${nonce}`
           previewSeedRef.current[index] = seedKey
-          seedPreviewUniverse(sim, seedKey, 30)
+          seedPreviewUniverse(sim, seedKey, Math.round(30 * 0.7))
         }
         
         // Clear and draw background
@@ -164,13 +164,21 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         ctx.shadowBlur = 6
         ctx.shadowColor = 'rgba(255,255,255,0.9)'
         
+        const maxMass = sim.stars.reduce((m, s) => Math.max(m, s.mass), 0)
+        const radiusPower = sim.config.radiusPower
+        const radiusScale = sim.config.radiusScale
+
         sim.stars.forEach((star) => {
           // Guard positions against NaN/undefined
           const x = Number.isFinite(star.x) ? star.x : 0
           const y = Number.isFinite(star.y) ? star.y : 0
           
-          // Guard radius against NaN/undefined
-          const baseRadius = Number.isFinite(star.radius) ? star.radius : 1
+          // Make the "center" (largest) star only 20% as massive visually
+          const massForVisual = star.mass >= maxMass ? star.mass * 0.2 : star.mass
+          const baseRadius = Number.isFinite(massForVisual)
+            ? (Math.pow(massForVisual, radiusPower) * radiusScale) / 2
+            : 1
+
           // Thumbnail tuning: keep stars small but still readable
           const r = Math.max(1.2, Math.min(6, 0.8 + Math.pow(baseRadius, 0.75) * 0.9))
           
