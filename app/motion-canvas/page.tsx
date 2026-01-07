@@ -7,9 +7,7 @@ import { Star } from '@/lib/gravity/star'
 import GravityDebugPanel from './GravityDebugPanel'
 import UniverseBrowser from './UniverseBrowser'
 import UniverseSelectionMenu from './UniverseSelectionMenu'
-// @ts-ignore - JSON import
-import initialUniverseData from '@/initial-universe.json'
-const initialUniverse = initialUniverseData as { width: number; height: number; stars: Array<{ x: number; y: number; mass: number }> }
+import { generateProceduralUniverse } from '@/lib/gravity/universe-presets'
 import styles from './page.module.css'
 
 export default function MotionCanvasPage() {
@@ -162,10 +160,17 @@ export default function MotionCanvasPage() {
         }
       }
       
-      // For preset universes, load fresh initial stars
-      if (key.startsWith('preset-')) {
-        systemRef.current.loadUniverse(initialUniverse)
-      }
+      // For non-saved universes, procedurally generate stars (no JSON baseline)
+      const w = systemRef.current.simulation.width
+      const h = systemRef.current.simulation.height
+      systemRef.current.loadUniverse(
+        generateProceduralUniverse({
+          width: w,
+          height: h,
+          config: newConfig,
+          seed: key,
+        })
+      )
     }
     
     setCurrentUniverseKey(key)
@@ -179,8 +184,17 @@ export default function MotionCanvasPage() {
     if (systemRef.current && currentUniverseKey !== null) {
       // Clear saved state for this universe
       universeStatesRef.current.delete(currentUniverseKey)
-      // Reload fresh initial stars
-      systemRef.current.loadUniverse(initialUniverse)
+      // Reload procedural stars deterministically for this universe key
+      const w = systemRef.current.simulation.width
+      const h = systemRef.current.simulation.height
+      systemRef.current.loadUniverse(
+        generateProceduralUniverse({
+          width: w,
+          height: h,
+          config,
+          seed: currentUniverseKey,
+        })
+      )
     }
   }
 
