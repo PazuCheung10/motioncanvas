@@ -62,10 +62,13 @@ export function generateProceduralUniverse(params: {
 
   const minMass = config?.minMass ?? GRAVITY_CONFIG.minMass
   const maxMass = config?.maxMass ?? GRAVITY_CONFIG.maxMass
+  const maxStarsCap = config?.maxStars ?? GRAVITY_CONFIG.maxStars
 
   // A bit denser for previews, a bit lighter for full-screen
-  const defaultCount = clamp(Math.floor((minDim * minDim) / 14000), 35, 140)
-  const n = clamp(starCount ?? defaultCount, 12, 220)
+  // Reduce baseline by ~30% for gameplay (user request); thumbnails override starCount explicitly.
+  const defaultCountRaw = Math.floor((minDim * minDim) / 14000)
+  const defaultCount = clamp(Math.floor(defaultCountRaw * 0.7), 25, 120)
+  const n = Math.min(clamp(starCount ?? defaultCount, 12, 220), maxStarsCap)
 
   // 2-4 cluster centers to create interesting structure
   const clusterCount = pick(rng, [2, 3, 4])
