@@ -84,8 +84,8 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               enableBoundaryWrapping: true,
               enableOrbitTrails: false,
               // Thumbnail tuning: reduce gravity by 30% (per request); we additionally scale by thumbnail size below.
-              // Increase thumbnail gravity by 30% (0.7 -> 0.91); we additionally scale by thumbnail size below.
-              gravityConstant: baseGravityConstant * 0.91,
+              // Increase thumbnail gravity by 2.5x; we additionally scale by thumbnail size below.
+              gravityConstant: baseGravityConstant * 2.5,
               minMass: previewMinMass,
               maxMass: previewMaxMass,
               radiusScale: previewRadiusScale,
@@ -206,8 +206,8 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
         enableBoundaryWrapping: true,
         enableOrbitTrails: false,
         // Thumbnail tuning: reduce gravity by 30% (per request); we additionally scale by thumbnail size below.
-        // Increase thumbnail gravity by 30% (0.7 -> 0.91); we additionally scale by thumbnail size below.
-        gravityConstant: baseGravityConstant * 0.91,
+        // Increase thumbnail gravity by 2.5x; we additionally scale by thumbnail size below.
+        gravityConstant: baseGravityConstant * 2.5,
         minMass: previewMinMass,
         maxMass: previewMaxMass,
         radiusScale: previewRadiusScale,
