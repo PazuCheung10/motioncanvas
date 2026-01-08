@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { GravityConfig, PhysicsMode } from '@/lib/gravity/config'
 import { generateProceduralUniverse, getPresetConfig, UNIVERSE_PRESETS, randomizeUniverse } from '@/lib/gravity/universe-presets'
+import { applyRandomMassBoost } from '@/lib/gravity/thumbnail-universe'
 import { GravitySimulation } from '@/lib/gravity/simulation'
 import styles from './UniverseBrowser.module.css'
 
@@ -106,7 +107,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
 
             const seedKey = previewSeedRef.current[index] ?? `browser-preview-${index}-${preset.name}`
             sim.loadUniverse(
-              generateProceduralUniverse({
+              applyRandomMassBoost(generateProceduralUniverse({
                 width: cssW,
                 height: cssH,
                 config,
@@ -115,7 +116,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 // reduce 40% again (0.6x)
                 // reduce 30% again (0.7x)
                 starCount: Math.round(55 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-              })
+              }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
             )
 
             // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
@@ -130,13 +131,13 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
             previewSeedRef.current[index] = seedKey
 
             sim.loadUniverse(
-              generateProceduralUniverse({
+              applyRandomMassBoost(generateProceduralUniverse({
                 width: sim.width,
                 height: sim.height,
                 config: sim.config,
                 seed: seedKey,
                 starCount: Math.round(30 * 0.7 * 0.7 * 0.6 * 0.7),
-              })
+              }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
             )
 
             // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
@@ -224,13 +225,13 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
       sim.updateConfig(config)
       previewSeedRef.current[index] = `browser-preview-${index}-${preset.name}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
       sim.loadUniverse(
-        generateProceduralUniverse({
+        applyRandomMassBoost(generateProceduralUniverse({
           width: sim.width,
           height: sim.height,
           config,
           seed: previewSeedRef.current[index],
           starCount: Math.round(55 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-        })
+        }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
       )
     }
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { GravityConfig } from '@/lib/gravity/config'
 import { generateProceduralUniverse, getPresetConfig, UNIVERSE_PRESETS } from '@/lib/gravity/universe-presets'
+import { applyRandomMassBoost } from '@/lib/gravity/thumbnail-universe'
 import { GravitySimulation } from '@/lib/gravity/simulation'
 import styles from './UniverseSelectionMenu.module.css'
 
@@ -61,7 +62,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
   }
 
   const seedPreviewUniverse = (sim: GravitySimulation, seedKey: string, starCount?: number) => {
-    const universe = generateProceduralUniverse({
+    const universe = applyRandomMassBoost(generateProceduralUniverse({
       width: sim.width,
       height: sim.height,
       config: sim.config,
@@ -71,7 +72,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       // reduce 40% again (0.6x)
       // reduce 30% again (0.7x)
       starCount: starCount ?? Math.round(60 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-    })
+    }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
     sim.loadUniverse(universe)
   }
 
