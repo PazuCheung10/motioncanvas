@@ -90,11 +90,14 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               mergeStopMass,
             }
 
-            // If the thumbnail is physically smaller, scale gravity down proportionally.
+            // Scale the "universe" down by thumbnail size. Keep dt constant; scale physics constants instead.
             const thumbMinDim = Math.min(cssW, cssH)
             const sizeScale = Math.max(0.1, Math.min(1.0, thumbMinDim / 600))
-            config.gravityConstant *= sizeScale
+            const degree = config.potentialEnergyDegree ?? currentConfig.potentialEnergyDegree
+            const gravityScale = Math.pow(sizeScale, degree + 1)
+            config.gravityConstant *= gravityScale
             config.softeningEpsPx *= sizeScale
+            config.radiusScale *= sizeScale
 
             sim = new GravitySimulation(cssW, cssH, config)
             simulationRefs.current[index] = sim
@@ -113,23 +116,11 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               })
             )
 
-            // Scale initial velocities down for tiny preview "universes"
-            const minDim = Math.min(sim.width, sim.height)
-            const speedScale = Math.max(0.1, Math.min(1.0, minDim / 600))
-            if (speedScale !== 1.0) {
-              sim.stars.forEach((star) => {
-                star.vx *= speedScale
-                star.vy *= speedScale
-                star.vxHalf *= speedScale
-                star.vyHalf *= speedScale
-              })
-            }
+            // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
           }
 
-          // Thumbnail "universe" is smaller → scale timestep down so motion doesn't look too fast
-          const thumbMinDim = Math.min(cssW, cssH)
-          const dtScale = Math.max(0.05, Math.min(0.4, thumbMinDim / 600))
-          sim.update((1 / 60) * dtScale)
+          // Keep dt constant; physics constants are scaled to thumbnail size.
+          sim.update(1 / 60)
 
           // If everything merged into 1 star, reset with a fresh mini-universe
           if (sim.stars.length <= 1) {
@@ -146,17 +137,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
               })
             )
 
-            // Scale initial velocities down for tiny preview "universes"
-            const minDim = Math.min(sim.width, sim.height)
-            const speedScale = Math.max(0.1, Math.min(1.0, minDim / 600))
-            if (speedScale !== 1.0) {
-              sim.stars.forEach((star) => {
-                star.vx *= speedScale
-                star.vy *= speedScale
-                star.vxHalf *= speedScale
-                star.vyHalf *= speedScale
-              })
-            }
+            // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
           }
           
           const ctx = canvas.getContext('2d')
@@ -228,11 +209,14 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
         radiusScale: previewRadiusScale,
         mergeStopMass,
       }
-      // Scale gravity down proportionally for tiny thumbnails.
-      const minDim = Math.min(sim.width, sim.height)
-      const sizeScale = Math.max(0.1, Math.min(1.0, minDim / 600))
-      config.gravityConstant *= sizeScale
+      // Scale the "universe" down by thumbnail size. Keep dt constant; scale physics constants instead.
+      const thumbMinDim = Math.min(sim.width, sim.height)
+      const sizeScale = Math.max(0.1, Math.min(1.0, thumbMinDim / 600))
+      const degree = config.potentialEnergyDegree ?? currentConfig.potentialEnergyDegree
+      const gravityScale = Math.pow(sizeScale, degree + 1)
+      config.gravityConstant *= gravityScale
       config.softeningEpsPx *= sizeScale
+      config.radiusScale *= sizeScale
       sim.updateConfig(config)
       previewSeedRef.current[index] = `browser-preview-${index}-${preset.name}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
       sim.loadUniverse(

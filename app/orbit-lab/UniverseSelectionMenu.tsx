@@ -71,18 +71,6 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       starCount: starCount ?? Math.round(60 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
     })
     sim.loadUniverse(universe)
-
-    // Thumbnail universe is tiny; scale initial velocities down proportionally to size.
-    const minDim = Math.min(sim.width, sim.height)
-    const speedScale = Math.max(0.1, Math.min(1.0, minDim / 600))
-    if (speedScale !== 1.0) {
-      sim.stars.forEach((star) => {
-        star.vx *= speedScale
-        star.vy *= speedScale
-        star.vxHalf *= speedScale
-        star.vyHalf *= speedScale
-      })
-    }
   }
 
   // Load saved states from localStorage
@@ -139,13 +127,16 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         if (!sim || sim.width !== cssW || sim.height !== cssH) {
           const preset = UNIVERSE_PRESETS[index]
           const baseConfig = buildPreviewConfig(getPresetConfig(preset))
-          // If the thumbnail is physically smaller, scale gravity down proportionally.
+          // Scale the "universe" down by thumbnail size. Keep dt constant; scale physics constants instead.
           const minDim = Math.min(cssW, cssH)
           const sizeScale = Math.max(0.1, Math.min(1.0, minDim / 600))
+          const degree = baseConfig.potentialEnergyDegree ?? currentConfig.potentialEnergyDegree
+          const gravityScale = Math.pow(sizeScale, degree + 1)
           const config = {
             ...baseConfig,
-            gravityConstant: baseConfig.gravityConstant * sizeScale,
+            gravityConstant: baseConfig.gravityConstant * gravityScale,
             softeningEpsPx: baseConfig.softeningEpsPx * sizeScale,
+            radiusScale: baseConfig.radiusScale * sizeScale,
           }
           sim = new GravitySimulation(cssW, cssH, config)
           simulationRefs.current[index] = sim
@@ -157,10 +148,8 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
         if (!ctx) return
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         
-        // Thumbnail "universe" is smaller → scale timestep down so motion doesn't look too fast
-        const thumbMinDim = Math.min(cssW, cssH)
-        const dtScale = Math.max(0.05, Math.min(0.4, thumbMinDim / 600))
-        sim.update(0.008 * dtScale)
+        // Keep dt constant; physics constants are scaled to thumbnail size.
+        sim.update(0.008)
 
         // If everything merged down to ~nothing, reset with a fresh mini-universe
         if (sim.stars.length <= 1) {
