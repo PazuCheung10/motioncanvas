@@ -116,7 +116,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 // reduce 40% again (0.6x)
                 // reduce 30% again (0.7x)
                 starCount: Math.round(55 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-              }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
+              }), { boostFactor: 4, minCount: 2, maxCount: 5, excludeHeaviest: true })
             )
 
             // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
@@ -137,7 +137,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
                 config: sim.config,
                 seed: seedKey,
                 starCount: Math.round(30 * 0.7 * 0.7 * 0.6 * 0.7),
-              }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
+              }), { boostFactor: 4, minCount: 2, maxCount: 5, excludeHeaviest: true })
             )
 
             // Velocities come from loadUniverse(); the constant ratio is achieved via scaled physics constants.
@@ -231,7 +231,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
           config,
           seed: previewSeedRef.current[index],
           starCount: Math.round(55 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-        }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
+        }), { boostFactor: 4, minCount: 2, maxCount: 5, excludeHeaviest: true })
       )
     }
   }

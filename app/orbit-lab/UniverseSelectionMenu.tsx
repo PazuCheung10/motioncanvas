@@ -72,7 +72,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
       // reduce 40% again (0.6x)
       // reduce 30% again (0.7x)
       starCount: starCount ?? Math.round(60 * 1.3 * 0.7 * 0.7 * 0.6 * 0.7),
-    }), { boostFactor: 2, minCount: 2, maxCount: 5, excludeHeaviest: true })
+    }), { boostFactor: 4, minCount: 2, maxCount: 5, excludeHeaviest: true })
     sim.loadUniverse(universe)
   }
 
