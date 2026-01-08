@@ -217,7 +217,7 @@ export default function UniverseSelectionMenu({ onSelectUniverse, currentConfig 
     const preset = UNIVERSE_PRESETS[index]
     const config: GravityConfig = {
       ...currentConfig,
-      ...preset.config
+      ...getPresetConfig(preset)
     }
     onSelectUniverse(config, `preset-${index}`)
   }

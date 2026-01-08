@@ -15,6 +15,8 @@ export default function OrbitLabPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const systemRef = useRef<GravitySystem | null>(null)
   const titleRef = useRef<HTMLDivElement>(null)
+  // Apply global gameplay tuning at load-time (keeps thumbnails independent).
+  const GAMEPLAY_GRAVITY_MULTIPLIER = 0.5
   // Check for loaded genome from Evolution Lab
   const loadConfigFromStorage = (): GravityConfig => {
     try {
@@ -113,8 +115,17 @@ export default function OrbitLabPage() {
   }
 
   const handleLoadUniverse = (newConfig: GravityConfig, universeKey?: string) => {
+    // For saved universes, do not modify config (load exactly what was saved).
+    const isSaved = typeof universeKey === 'string' && universeKey.startsWith('saved-')
+    const configToLoad: GravityConfig = isSaved
+      ? newConfig
+      : {
+          ...newConfig,
+          gravityConstant: newConfig.gravityConstant * GAMEPLAY_GRAVITY_MULTIPLIER,
+        }
+
     // Generate a unique key for this universe config
-    const key = universeKey || JSON.stringify(newConfig)
+    const key = universeKey || JSON.stringify(configToLoad)
     
     if (systemRef.current) {
       // Check if this is a saved state (starts with "saved-")
@@ -168,7 +179,7 @@ export default function OrbitLabPage() {
         generateProceduralUniverse({
           width: w,
           height: h,
-          config: newConfig,
+          config: configToLoad,
           seed: key,
         })
       )
@@ -176,7 +187,7 @@ export default function OrbitLabPage() {
     
     setCurrentUniverseKey(key)
     currentUniverseKeyRef.current = key // Keep ref in sync
-    setConfig(newConfig)
+    setConfig(configToLoad)
     setShowSelectionMenu(false) // Hide menu after selection
   }
   

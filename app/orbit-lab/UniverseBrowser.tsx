@@ -251,7 +251,7 @@ export default function UniverseBrowser({ onLoadUniverse, onResetUniverse, curre
     const preset = UNIVERSE_PRESETS[presetIndex]
     const config: GravityConfig = {
       ...currentConfig,
-      ...preset.config
+      ...getPresetConfig(preset)
     }
     // Pass preset index as universe key to identify which universe this is
     onLoadUniverse(config, `preset-${presetIndex}`)
