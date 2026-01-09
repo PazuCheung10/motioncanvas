@@ -30,9 +30,10 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
   }, [config])
 
   const updateConfig = (key: keyof GravityConfig, value: number | boolean) => {
-    // Clamp gravity constant to valid range
+    // Clamp gravity constant to valid range and round to nearest 50
     if (key === 'gravityConstant' && typeof value === 'number') {
-      value = Math.max(0, Math.min(30000, value))
+      value = Math.max(0, Math.min(5000, value))
+      value = Math.round(value / 50) * 50 // Round to nearest multiple of 50
     }
     const newConfig = { ...localConfig, [key]: value }
     setLocalConfig(newConfig)
@@ -262,8 +263,8 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               <input
                 type="range"
                 min="0"
-                max="30000"
-                step="1000"
+                max="5000"
+                step="50"
                 value={localConfig.gravityConstant}
                 onChange={(e) => updateConfig('gravityConstant', parseInt(e.target.value))}
               />
