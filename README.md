@@ -7,6 +7,18 @@ This project focuses less on perfect physical accuracy, and more on
 making complex simulation rules visible, adjustable, and explorable
 in real time.
 
+## Why Orbit Lab Exists
+
+Orbit Lab was built as an exploratory sandbox to study how small
+numerical and design decisions in physics simulations lead to
+dramatically different emergent behaviors.
+
+## Who This Is For
+
+- Developers interested in physics simulations and emergent systems
+- Designers exploring interactive parameter-driven systems
+- Anyone curious about chaos, stability, and real-time feedback loops
+
 ## Repository
 
 - GitHub: [PazuCheung10/orbitlab](https://github.com/PazuCheung10/orbitlab)
@@ -162,7 +174,7 @@ Key configuration parameters are in `lib/gravity/config.ts`:
 - `MIN_MASS` / `MAX_MASS`: Mass range for created stars
 - `HOLD_TO_MAX_SECONDS`: Time to hold for maximum mass
 
-## Technologies
+## Tech Stack
 
 - **Next.js 14**: React framework with App Router
 - **TypeScript**: Type-safe development
@@ -184,4 +196,9 @@ Key configuration parameters are in `lib/gravity/config.ts`:
 
 ## License
 
-Private project - All rights reserved
+This project is not open-source.
+The code is provided for demonstration and portfolio purposes only.
+
+---
+Built by Pazu
+https://pazu.dev
