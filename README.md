@@ -33,7 +33,7 @@ trade-offs between stability, realism, and interactivity.
 
 - **Interactive Gravity Simulation**: Create stars by clicking and dragging, watch them interact through gravitational forces
 - **Multiple Physics Modes**: 
-  - Orbit Playground: Stable orbital mechanics with a central sun
+  - Orbit Playground: Stable orbital mechanics
   - N-Body Chaos: Full pairwise gravitational interactions
 - **Universe Management**: 
   - Preset universes with different configurations
@@ -120,9 +120,8 @@ OrbitLab/
 ### Physics Modes
 
 #### Orbit Playground Mode
-- Features a central sun with configurable mass
-- Stars orbit around the sun in stable elliptical orbits
-- Energy-conserving physics for long-term stability
+- Stars interact through pairwise gravitational forces
+- Stable elliptical orbits with energy-conserving physics
 - Ideal for observing orbital mechanics
 
 #### N-Body Chaos Mode
@@ -162,7 +161,6 @@ Key configuration parameters are in `lib/gravity/config.ts`:
 - `GRAVITY_CONSTANT`: Gravitational constant (default is defined in code; presets and random universes may override it)
 - `VELOCITY_DAMPING`: Energy loss per frame (0 = no damping)
 - `SOFTENING_EPS_PX`: Gravity softening parameter to prevent singularities
-- `SUN_MASS`: Central sun mass for Orbit Playground mode
 
 ### Visual Parameters
 - `RADIUS_SCALE`: Visual scaling factor for star size
