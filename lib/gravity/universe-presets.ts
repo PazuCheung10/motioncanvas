@@ -144,8 +144,8 @@ export function randomizeUniverse(): Partial<GravityConfig> {
     satellitesAttractEachOther: Math.random() < 0.3, // 30% chance
     
     // Make each random universe meaningfully different
-    // Reduced by 30% then 40% then 50% then 20% per request (preserves the shape of the distribution)
-    gravityConstant: logUniform(336, 2016),
+    // Reduced by 30% then 40% then 50% then 20% then decreased by 100 per request (preserves the shape of the distribution)
+    gravityConstant: logUniform(250, 1900),
     softeningEpsPx: logUniform(1, 10),
     maxForceMagnitude: Math.random() < 0.5 ? 0 : logUniform(100, 10000),
     
@@ -174,7 +174,7 @@ export const UNIVERSE_PRESETS: UniversePreset[] = [
       physicsMode: PhysicsMode.ORBIT_PLAYGROUND,
       sunMass: 200,
       satellitesAttractEachOther: false,
-      gravityConstant: 850,
+      gravityConstant: 750,
       softeningEpsPx: 1.5,
       maxForceMagnitude: 0,
       orbitFactor: 1.0,
@@ -191,7 +191,7 @@ export const UNIVERSE_PRESETS: UniversePreset[] = [
       physicsMode: PhysicsMode.ORBIT_PLAYGROUND,
       sunMass: 250,
       satellitesAttractEachOther: false,
-      gravityConstant: 700,
+      gravityConstant: 600,
       softeningEpsPx: 3,
       maxForceMagnitude: 0,
       orbitFactor: 0.85,
@@ -208,7 +208,7 @@ export const UNIVERSE_PRESETS: UniversePreset[] = [
       physicsMode: PhysicsMode.ORBIT_PLAYGROUND,
       sunMass: 300,
       satellitesAttractEachOther: false,
-      gravityConstant: 1400,
+      gravityConstant: 1300,
       softeningEpsPx: 1.5,
       maxForceMagnitude: 0,
       orbitFactor: 1.0,
@@ -225,7 +225,7 @@ export const UNIVERSE_PRESETS: UniversePreset[] = [
       physicsMode: PhysicsMode.ORBIT_PLAYGROUND,
       sunMass: 150,
       satellitesAttractEachOther: false,
-      gravityConstant: 450,
+      gravityConstant: 350,
       softeningEpsPx: 1.5,
       maxForceMagnitude: 0,
       orbitFactor: 1.0,
@@ -242,7 +242,7 @@ export const UNIVERSE_PRESETS: UniversePreset[] = [
       physicsMode: PhysicsMode.N_BODY_CHAOS,
       sunMass: 200,
       satellitesAttractEachOther: true,
-      gravityConstant: 1100,
+      gravityConstant: 1000,
       softeningEpsPx: 3,
       maxForceMagnitude: 5000,
       orbitFactor: 1.0,
