@@ -84,62 +84,56 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               </div>,
               document.body
             )}
-          <div className={styles.info}>
-            <strong>Stars:</strong> {starCount} / {config.maxStars}
-          </div>
+          
+          {/* Header: Sticky - Global state and quick actions */}
+          <div className={styles.header}>
+            <div className={styles.info}>
+              <strong>Stars:</strong> {starCount} / {config.maxStars}
+            </div>
 
-          {/* Energy Debug Overlay */}
-          {energyStats && (
-            <div className={styles.debugStats} style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', padding: '8px', borderRadius: '4px', marginBottom: '12px' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#ffff00' }}>Energy Debug</div>
-              <div className={styles.debugStatsContent}>
-                <div className={styles.debugStatRow}>
-                  <span className={styles.debugStatLabel}>Kinetic (K):</span>
-                  <span className={styles.debugStatValue}>{energyStats.kinetic.toFixed(2)}</span>
-                </div>
-                <div className={styles.debugStatRow}>
-                  <span className={styles.debugStatLabel}>Potential (U):</span>
-                  <span className={styles.debugStatValue}>{energyStats.potential.toFixed(2)}</span>
-                </div>
-                <div className={styles.debugStatRow}>
-                  <span className={styles.debugStatLabel}>Total (E=K+U):</span>
-                  <span className={styles.debugStatValue} style={{ 
-                    color: energyStats.trend === 'decreasing' ? '#ff0000' : 
-                           energyStats.trend === 'increasing' ? '#00ff00' : '#ffffff'
-                  }}>
-                    {energyStats.total.toFixed(2)}
-                  </span>
-                </div>
-                {energyStats.history.length > 10 && (
-                  <div className={styles.debugStatRow} style={{ fontSize: '0.85em', marginTop: '4px' }}>
-                    <span className={styles.debugStatLabel}>Trend:</span>
-                    <span className={styles.debugStatValue} style={{
+            {/* Energy Debug Overlay */}
+            {energyStats && (
+              <div className={styles.debugStats} style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', padding: '8px', borderRadius: '4px', marginBottom: '8px' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#ffff00' }}>Energy Debug</div>
+                <div className={styles.debugStatsContent}>
+                  <div className={styles.debugStatRow}>
+                    <span className={styles.debugStatLabel}>Kinetic (K):</span>
+                    <span className={styles.debugStatValue}>{energyStats.kinetic.toFixed(2)}</span>
+                  </div>
+                  <div className={styles.debugStatRow}>
+                    <span className={styles.debugStatLabel}>Potential (U):</span>
+                    <span className={styles.debugStatValue}>{energyStats.potential.toFixed(2)}</span>
+                  </div>
+                  <div className={styles.debugStatRow}>
+                    <span className={styles.debugStatLabel}>Total (E=K+U):</span>
+                    <span className={styles.debugStatValue} style={{ 
                       color: energyStats.trend === 'decreasing' ? '#ff0000' : 
-                             energyStats.trend === 'increasing' ? '#00ff00' : '#ffff00'
+                             energyStats.trend === 'increasing' ? '#00ff00' : '#ffffff'
                     }}>
-                      {energyStats.trend === 'decreasing' ? '↓ DECREASING' : 
-                       energyStats.trend === 'increasing' ? '↑ INCREASING' : '→ STABLE'}
+                      {energyStats.total.toFixed(2)}
                     </span>
                   </div>
-                )}
+                  {energyStats.history.length > 10 && (
+                    <div className={styles.debugStatRow} style={{ fontSize: '0.85em', marginTop: '4px' }}>
+                      <span className={styles.debugStatLabel}>Trend:</span>
+                      <span className={styles.debugStatValue} style={{
+                        color: energyStats.trend === 'decreasing' ? '#ff0000' : 
+                               energyStats.trend === 'increasing' ? '#00ff00' : '#ffff00'
+                      }}>
+                        {energyStats.trend === 'decreasing' ? '↓ DECREASING' : 
+                         energyStats.trend === 'increasing' ? '↑ INCREASING' : '→ STABLE'}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className={styles.section}>
-            <h3>Controls</h3>
             <div className={styles.controlsRow}>
               {onSaveState && (
                 <button
                   onClick={onSaveState}
-                  className={styles.controlButton}
-                  style={{
-                    backgroundColor: 'rgba(50, 150, 50, 0.3)',
-                    color: 'white',
-                    border: '1px solid rgba(50, 150, 50, 0.5)'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(50, 150, 50, 0.5)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(50, 150, 50, 0.3)'}
+                  className={`${styles.controlButton} ${styles.controlButtonSave}`}
                 >
                   💾 Save
                 </button>
@@ -147,14 +141,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               {onRandomizeStars && (
                 <button
                   onClick={onRandomizeStars}
-                  className={styles.controlButton}
-                  style={{
-                    backgroundColor: 'rgba(120, 80, 255, 0.35)',
-                    color: 'white',
-                    border: '1px solid rgba(120, 80, 255, 0.6)'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(120, 80, 255, 0.55)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(120, 80, 255, 0.35)'}
+                  className={`${styles.controlButton} ${styles.controlButtonRandom}`}
                 >
                   Add Random (10-30)
                 </button>
@@ -162,13 +149,7 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               {onClearStars && (
                 <button
                   onClick={onClearStars}
-                  className={styles.controlButton}
-                  style={{
-                    backgroundColor: '#ff4444',
-                    color: 'white'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ff6666'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff4444'}
+                  className={`${styles.controlButton} ${styles.controlButtonClear}`}
                 >
                   Clear ({starCount})
                 </button>
@@ -176,9 +157,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
             </div>
           </div>
 
-          <div className={styles.section}>
-            <h3>
-              Orbit Factor
+          {/* Body: Scrollable - Configuration sections */}
+          <div className={styles.body}>
+            {/* 1. Creation & Launch */}
+            <div className={styles.section}>
+              <h3>
+                Orbit Factor
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "Controls initial orbit shape\n↑ = more elliptical, faster escape\n1.0 = perfect circular orbit")}
@@ -203,127 +187,9 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
             </label>
           </div>
 
-          <div className={styles.section}>
-            <h3>
-              Core Physics
-              <span 
-                className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: ↑ = faster launches\nMass Resistance: ↑ = big stars launch slower\nGravity Constant: ↑ = tighter orbits, faster collapse\nPhysics: G in F = G·m1·m2 / r²\nVelocity Damping: ↑ = system cools over time\n0 = true energy conservation\nPotential Energy Degree: Controls how gravity falls with distance\n2.0 = real Newtonian gravity")}
-                onMouseLeave={handleHelpMouseLeave}
-              >
-                ?
-              </span>
-            </h3>
-            <label>
-              Launch Strength: {localConfig.launchStrength.toFixed(2)}
-              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
-                1.0 = compressed speed is final speed (before mass resistance)
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="2.0"
-                step="0.1"
-                value={localConfig.launchStrength}
-                onChange={(e) => updateConfig('launchStrength', parseFloat(e.target.value))}
-              />
-            </label>
-            <label>
-              Mass Resistance: {localConfig.massResistanceFactor.toFixed(2)}
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={localConfig.massResistanceFactor}
-                onChange={(e) => updateConfig('massResistanceFactor', parseFloat(e.target.value))}
-              />
-            </label>
-            <label>
-              Gravity Constant: {localConfig.gravityConstant}
-              <input
-                type="range"
-                min="0"
-                max="5000"
-                step="50"
-                value={localConfig.gravityConstant}
-                onChange={(e) => updateConfig('gravityConstant', parseInt(e.target.value))}
-              />
-            </label>
-            <label>
-              Velocity Damping: {localConfig.velocityDamping.toFixed(6)}
-              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
-                Set to 0 for energy conservation
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="0.0001"
-                step="0.000001"
-                value={localConfig.velocityDamping}
-                onChange={(e) => updateConfig('velocityDamping', parseFloat(e.target.value))}
-              />
-            </label>
-            <label>
-              Potential Energy Degree: {localConfig.potentialEnergyDegree.toFixed(1)}
-              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
-                Power law: U = -G*m1*m2 / r^(degree-1), F = G*m1*m2*(degree-1) / r^degree
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="0.1"
-                value={localConfig.potentialEnergyDegree}
-                onChange={(e) => updateConfig('potentialEnergyDegree', parseFloat(e.target.value))}
-              />
-            </label>
-          </div>
-
-          <div className={styles.section}>
-            <h3>
-              Gravity Softening
-              <span 
-                className={styles.helpBadge}
-                onMouseEnter={(e) => handleHelpMouseEnter(e, "Softening Epsilon: Prevents explosions when stars get too close\n↑ = smoother but less accurate\nMax Force: Clamps extreme accelerations\n0 = disabled (may break energy conservation)")}
-                onMouseLeave={handleHelpMouseLeave}
-              >
-                ?
-              </span>
-            </h3>
-            <label>
-              Softening Epsilon: {localConfig.softeningEpsPx.toFixed(1)} px
-              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
-                Plummer softening parameter (prevents near-distance explosions)
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="0.5"
-                value={localConfig.softeningEpsPx}
-                onChange={(e) => updateConfig('softeningEpsPx', parseFloat(e.target.value))}
-              />
-            </label>
-            <label>
-              Max Force: {localConfig.maxForceMagnitude}
-              <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
-                Clamp force magnitude (0 = disabled)
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="5000"
-                step="100"
-                value={localConfig.maxForceMagnitude}
-                onChange={(e) => updateConfig('maxForceMagnitude', parseInt(e.target.value))}
-              />
-            </label>
-          </div>
-
-          <div className={styles.section}>
-            <h3>
-              Launch Velocity
+            <div className={styles.section}>
+              <h3>
+                Launch Velocity
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "Window: How long to track cursor movement\n↑ = smoother but slower response\nS0: Speed compression threshold\nVmax: Maximum launch speed cap")}
@@ -367,9 +233,9 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
             </label>
           </div>
 
-          <div className={styles.section}>
-            <h3>
-              Mass Growth
+            <div className={styles.section}>
+              <h3>
+                Mass Growth
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "Hold to Max: Time to reach maximum mass\n↑ = slower growth\nMin/Max Mass: Size range for new stars\nRadius Scale: ↑ = bigger stars\nRadius Power: Controls size scaling\n0.5 = 2D area, 0.333 = 3D volume")}
@@ -441,9 +307,9 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
             </label>
           </div>
 
-          <div className={styles.section}>
-            <h3>
-              Angular Guidance (Launch Assist Only)
+            <div className={styles.section}>
+              <h3>
+                Angular Guidance (Launch Assist Only)
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "Guidance Strength: Helps launches form orbits\n↑ = more circular, less radial\n0 = no guidance, 1 = pure tangential\nRadial Clamp: Reduces excessive inward/outward motion\nSearch Radius: How far to look for orbital center")}
@@ -491,11 +357,131 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
                 onChange={(e) => updateConfig('orbitalCenterSearchRadius', parseInt(e.target.value))}
               />
             </label>
-          </div>
+            </div>
 
-          <div className={styles.section}>
-            <h3>
-              Visual
+            {/* 2. Core Physics */}
+            <div className={styles.section}>
+              <h3>
+                Core Physics
+                <span 
+                  className={styles.helpBadge}
+                  onMouseEnter={(e) => handleHelpMouseEnter(e, "Launch Strength: ↑ = faster launches\nMass Resistance: ↑ = big stars launch slower\nGravity Constant: ↑ = tighter orbits, faster collapse\nPhysics: G in F = G·m1·m2 / r²\nVelocity Damping: ↑ = system cools over time\n0 = true energy conservation\nPotential Energy Degree: Controls how gravity falls with distance\n2.0 = real Newtonian gravity")}
+                  onMouseLeave={handleHelpMouseLeave}
+                >
+                  ?
+                </span>
+              </h3>
+              <label>
+                Launch Strength: {localConfig.launchStrength.toFixed(2)}
+                <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                  1.0 = compressed speed is final speed (before mass resistance)
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="2.0"
+                  step="0.1"
+                  value={localConfig.launchStrength}
+                  onChange={(e) => updateConfig('launchStrength', parseFloat(e.target.value))}
+                />
+              </label>
+              <label>
+                Mass Resistance: {localConfig.massResistanceFactor.toFixed(2)}
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={localConfig.massResistanceFactor}
+                  onChange={(e) => updateConfig('massResistanceFactor', parseFloat(e.target.value))}
+                />
+              </label>
+              <label>
+                Gravity Constant: {localConfig.gravityConstant}
+                <input
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value={localConfig.gravityConstant}
+                  onChange={(e) => updateConfig('gravityConstant', parseInt(e.target.value))}
+                />
+              </label>
+              <label>
+                Potential Energy Degree: {localConfig.potentialEnergyDegree.toFixed(1)}
+                <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                  Power law: U = -G*m1*m2 / r^(degree-1), F = G*m1*m2*(degree-1) / r^degree
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.1"
+                  value={localConfig.potentialEnergyDegree}
+                  onChange={(e) => updateConfig('potentialEnergyDegree', parseFloat(e.target.value))}
+                />
+              </label>
+              <label>
+                Velocity Damping: {localConfig.velocityDamping.toFixed(6)}
+                <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                  Set to 0 for energy conservation
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.0001"
+                  step="0.000001"
+                  value={localConfig.velocityDamping}
+                  onChange={(e) => updateConfig('velocityDamping', parseFloat(e.target.value))}
+                />
+              </label>
+            </div>
+
+            <div className={styles.section}>
+              <h3>
+                Gravity Softening
+                <span 
+                  className={styles.helpBadge}
+                  onMouseEnter={(e) => handleHelpMouseEnter(e, "Softening Epsilon: Prevents explosions when stars get too close\n↑ = smoother but less accurate\nMax Force: Clamps extreme accelerations\n0 = disabled (may break energy conservation)")}
+                  onMouseLeave={handleHelpMouseLeave}
+                >
+                  ?
+                </span>
+              </h3>
+              <label>
+                Softening Epsilon: {localConfig.softeningEpsPx.toFixed(1)} px
+                <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                  Plummer softening parameter (prevents near-distance explosions)
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="0.5"
+                  value={localConfig.softeningEpsPx}
+                  onChange={(e) => updateConfig('softeningEpsPx', parseFloat(e.target.value))}
+                />
+              </label>
+              <label>
+                Max Force: {localConfig.maxForceMagnitude}
+                <div className={styles.info} style={{ fontSize: '9px', marginTop: '2px' }}>
+                  Clamp force magnitude (0 = disabled)
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="100"
+                  value={localConfig.maxForceMagnitude}
+                  onChange={(e) => updateConfig('maxForceMagnitude', parseInt(e.target.value))}
+                />
+              </label>
+            </div>
+
+            {/* 3. Visual & Non-Physical */}
+            <div className={styles.section}>
+              <h3>
+                Visual
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "Glow Radius Multiplier: ↑ = bigger halos around stars\nOpacity Multiplier: ↑ = more visible stars")}
@@ -532,11 +518,12 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
                 onChange={(e) => updateConfig('opacityMultiplier', parseFloat(e.target.value))}
               />
             </label>
-          </div>
+            </div>
 
-          <div className={styles.section}>
-            <h3>
-              Merging
+            {/* 4. Simulation Rules */}
+            <div className={styles.section}>
+              <h3>
+                Merging
               <span 
                 className={styles.helpBadge}
                 onMouseEnter={(e) => handleHelpMouseEnter(e, "When stars collide, they merge\nMomentum conserved, energy lost\nDisable for pure physics validation")}
@@ -553,18 +540,20 @@ export default function GravityDebugPanel({ config, onConfigChange, starCount, o
               />
               Enable Merging (stars merge when smaller star is inside larger star)
             </label>
-          </div>
+            </div>
 
-          <div className={styles.section}>
-            <button 
-              className={styles.resetButton}
-              onClick={() => {
-                const defaultConfig = { ...GRAVITY_CONFIG }
-                onConfigChange(defaultConfig)
-              }}
-            >
-              Reset to Defaults
-            </button>
+            {/* Reset to Default */}
+            <div className={styles.section}>
+              <button 
+                className={styles.resetButton}
+                onClick={() => {
+                  const defaultConfig = { ...GRAVITY_CONFIG }
+                  onConfigChange(defaultConfig)
+                }}
+              >
+                Reset value to default
+              </button>
+            </div>
           </div>
         </div>
       )}
